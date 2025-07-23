@@ -10,7 +10,7 @@ if not disk_drive then
 end
 
 local function createPlayerCard()
-	if not fs.exists("disk") do
+	if not fs.exists("disk") then
 		print("Please insert a floppy disk...")
 		return
 	end
@@ -54,7 +54,7 @@ local function createPlayerCard()
 end
 
 local function readPlayerCard()
-	if not fs.exists("disk") do
+	if not fs.exists("disk") then
 		print("Please insert a floppy disk...")
 		return
 	end
