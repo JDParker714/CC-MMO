@@ -15,42 +15,68 @@ local function createPlayerCard()
 		return
 	end
 
+	if fs.exists("disk/.player_id") then
+		print("Warning: This disk already has a player card.")
+		print("Overwriting will erase existing data. Continue? (y/n)")
+		local confirm = read()
+		if confirm:lower() ~= "y" then
+			print("Aborting.")
+			return
+		end
+	end
+
 	write("Enter username: ")
 	local name = read()
 
 	write("Enter password: ")
 	local password = read("*")
 
-	local id = "id_" .. tostring(math.random(1000000, 9999999))
+	local max_retries = 5
+	local attempt = 1
+	local success = false
+	local id = nil
 
-	-- Send request to server
-	local request = {
-		type = "create_player",
-		id = id,
-		name = name,
-		password = password
-	}
+	while attempt <= max_retries do
+		id = "id_" .. tostring(math.random(1000000, 9999999))
+		-- Send request to server
+		local request = {
+			type = "create_player",
+			id = id,
+			name = name,
+			password = password
+		}
 
-	rednet.broadcast(textutils.serialize(request))
-	local _, response_raw = rednet.receive(3)
-	if not response_raw then
-		print("Server did not respond.")
+		rednet.broadcast(textutils.serialize(request))
+		local _, response_raw = rednet.receive(3)
+		if not response_raw then
+			print("Server did not respond.")
+			return
+		end
+
+		local response = textutils.unserialize(response_raw)
+		if response.status == "success" then
+			success = true
+			break
+		elseif response.status == "duplicate" then
+			print("ID collision (attempt " .. attempt .. "). Retrying...")
+			attempt = attempt + 1
+		else
+			print("Unknown server response.")
+			return
+		end
+	end
+
+	if not success then
+		print("Failed to generate a unique ID after " .. max_retries .. " attempts.")
 		return
 	end
 
-	local response = textutils.unserialize(response_raw)
-	if response.status == "duplicate" then
-		print("ID already exists. Try again.")
-	elseif response.status == "success" then
-		-- Write ID to floppy and label it
-		local f = fs.open("disk/.player_id", "w")
-		f.write(id)
-		f.close()
-		disk_drive.setDiskLabel(name .. "'s disk")
-		print("Card created for " .. name .. " (ID: " .. id .. ")")
-	else
-		print("Unknown error.")
-	end
+	-- Write ID to floppy and label it
+	local f = fs.open("disk/.player_id", "w")
+	f.write(id)
+	f.close()
+	disk_drive.setDiskLabel(name .. "'s disk")
+	print("Card created for " .. name .. " (ID: " .. id .. ")")
 end
 
 local function readPlayerCard()
