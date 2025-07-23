@@ -1,21 +1,16 @@
 -- sell_shop.lua
 
 -- Open the modem on any side
-local modem_side = peripheral.find("modem", function(name)
-	rednet.open(name)
-	return true
-end)
+local modem = peripheral.find("modem", rednet.open)
 
 local disk_drive = peripheral.find("drive")
 local input_chest = peripheral.wrap("right")	-- change side as needed
 local output_chest = peripheral.wrap("back")  -- change side as needed
 
-if not disk_drive or not modem_side or not input_chest or not output_chest then
+if not disk_drive or not input_chest or not output_chest then
 	print("Missing peripherals.")
 	return
 end
-
-local modem = peripheral.wrap(modem_side)
 
 local price_table = {
 	["minecraft:carrot"] = 1
