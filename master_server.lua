@@ -43,11 +43,11 @@ while true do
 			status = "found",
 			data = player_db[data.id]
 		}))
-    elseif data and data.type == "add_balance" and player_db[data.id] then
-        player_db[data.id].balance = player_db[data.id].balance + data.amount
-        save_db()
-        rednet.send(sender, textutils.serialize({ status = "balance_updated" }))
-        print("Updated balance for " .. player_db[data.id].name .. ": +" .. data.amount)
+	elseif data and data.type == "add_balance" and player_db[data.id] then
+		player_db[data.id].balance = player_db[data.id].balance + data.amount
+		save_db()
+		rednet.send(sender, textutils.serialize({ status = "balance_updated" }))
+		print("Updated balance for " .. player_db[data.id].name .. ": +" .. data.amount)
 	else
 		rednet.send(sender, textutils.serialize({ status = "not_found" }))
 	end
