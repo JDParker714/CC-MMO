@@ -1,6 +1,8 @@
 -- sell_shop.lua
 
 -- Open the modem on any side
+os.loadAPI("keys")
+
 local modem = peripheral.find("modem", rednet.open)
 
 local disk_drive = peripheral.find("drive")
@@ -88,6 +90,8 @@ while true do
 	local sold_total = 0
 	local last_sale_time = os.clock()
 
+	print("You may now place items in the input chest to sell.")
+
 	while true do
 		local items = input_chest.list()
 		local sold_something = false
@@ -110,12 +114,20 @@ while true do
 			sold_total = 0
 		end
 
-		print("Press ENTER to log out, or wait to sell more.")
-		local timeout = 60 - (os.clock() - last_sale_time)
-		local event, key = os.pullEvent("char")
-		if key == "\n" or timeout <= 0 then
-			print("Logging out...")
-			break
+		-- Wait 2s and check for logout or timeout
+		print("Press ENTER to log out, or place more items...")
+		local timer = os.startTimer(2)
+		while true do
+			local event, param = os.pullEventRaw()
+			if event == "key" and param == keys.enter then
+				print("Logging out...")
+				goto logout
+			elseif event == "timer" and os.clock() - last_sale_time > 60 then
+				print("No activity. Logging out...")
+				goto logout
+			elseif event == "timer" then
+				break -- repeat loop
+			end
 		end
 	end
 
