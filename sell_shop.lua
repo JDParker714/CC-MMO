@@ -1,8 +1,6 @@
 -- sell_shop.lua
 
 -- Open the modem on any side
-os.loadAPI("keys")
-
 local modem = peripheral.find("modem", rednet.open)
 
 local disk_drive = peripheral.find("drive")
@@ -72,7 +70,7 @@ while true do
 		print("Invalid card. Ejecting.")
 		disk_drive.ejectDisk()
 		sleep(2)
-		goto continue
+		goto logout
 	end
 
 	print("Welcome, " .. player.name)
@@ -82,7 +80,7 @@ while true do
 		print("Incorrect password.")
 		disk_drive.ejectDisk()
 		sleep(2)
-		goto continue
+		goto logout
 	end
 
 	print("Authenticated. Checking items in input chest...")
@@ -91,7 +89,7 @@ while true do
 	local last_sale_time = os.clock()
 
 	print("You may now place items in the input chest to sell.")
-
+    local has_notified = false
 	while true do
 		local items = input_chest.list()
 		local sold_something = false
@@ -115,7 +113,11 @@ while true do
 		end
 
 		-- Wait 2s and check for logout or timeout
-		print("Press ENTER to log out, or place more items...")
+        if not has_notified then
+		    print("Press ENTER to log out, or place more items...")
+            has_notified = true
+        end
+        
 		local timer = os.startTimer(2)
 		while true do
 			local event, param = os.pullEventRaw()
@@ -133,5 +135,5 @@ while true do
 
 	disk_drive.ejectDisk()
 
-	::continue::
+	::logout::
 end
