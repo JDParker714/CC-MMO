@@ -2,7 +2,8 @@ local files = {
     { name = "master_server.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/master_server.lua" },
     { name = "player_card_kiosk.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/player_card_kiosk.lua" },
     { name = "sell_shop.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/sell_shop.lua" },
-    { name = "transfer_balance_kiosk.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/transfer_balance_kiosk.lua" }
+    { name = "transfer_balance_kiosk.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/transfer_balance_kiosk.lua" },
+    { name = "purchase_kiosk.lua", url = "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/purchase_kiosk.lua" }
 }
 
 for _, file in ipairs(files) do
