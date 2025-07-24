@@ -5,16 +5,32 @@ local modem = peripheral.find("modem", rednet.open)
 
 local disk_drive = peripheral.find("drive")
 local input_chest = peripheral.wrap("right")	-- change side as needed
-local output_chest = peripheral.wrap("back")  -- change side as needed
+local output_chest = peripheral.wrap("left")  -- change side as needed
 
 if not disk_drive or not input_chest or not output_chest then
 	print("Missing peripherals.")
 	return
 end
 
-local price_table = {
-	["minecraft:carrot"] = 1
-}
+local function fetchPriceTable()
+	local req = { type = "get_price_table" }
+	rednet.broadcast(textutils.serialize(req))
+	local _, raw = rednet.receive(3)
+	if not raw then
+		print("Failed to fetch price table from server.")
+		return {}
+	end
+
+	local resp = textutils.unserialize(raw)
+	if resp.status == "ok" and resp.prices then
+		return resp.prices
+	end
+
+	print("Invalid response from server.")
+	return {}
+end
+
+local price_table = fetchPriceTable()
 
 local function readPlayerId()
 	if not fs.exists("disk/.player_id") then
@@ -70,7 +86,7 @@ while true do
 		print("Invalid card. Ejecting.")
 		disk_drive.ejectDisk()
 		sleep(2)
-		goto logout
+		goto continue
 	end
 
 	print("Welcome, " .. player.name)
@@ -80,7 +96,16 @@ while true do
 		print("Incorrect password.")
 		disk_drive.ejectDisk()
 		sleep(2)
-		goto logout
+		goto continue
+	end
+
+	price_table = fetchPriceTable()
+	if not next(price_table) then
+		print("Unable to fetch pricing from server.")
+		print("Please try again later.")
+		disk_drive.ejectDisk()
+		sleep(3)
+		goto continue
 	end
 
 	print("Authenticated. Checking items in input chest...")
@@ -138,7 +163,9 @@ while true do
 		end
 	end
 
+	::logout::
+
 	disk_drive.ejectDisk()
 
-	::logout::
+	::continue::
 end

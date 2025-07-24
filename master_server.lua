@@ -3,6 +3,11 @@
 
 local ADMIN_PASSWORD = "#admin714"
 
+local item_prices = {
+	["minecraft:carrot"] = 1,
+	["minecraft:gunpowder"] = 5
+}
+
 local data_file = "players.db"
 local modem = peripheral.find("modem", rednet.open)
 
@@ -56,6 +61,11 @@ while true do
 		else
 			rednet.send(sender, textutils.serialize({ status = "unauthorized" }))
 		end
+	elseif data and data.type == "get_price_table" then
+		rednet.send(sender, textutils.serialize({
+			status = "ok",
+			prices = item_prices
+		}))
 	else
 		rednet.send(sender, textutils.serialize({ status = "not_found" }))
 	end
