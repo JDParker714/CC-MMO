@@ -123,7 +123,7 @@ while true do
 					else
 						print("Error: Could not contact server.")
 					end
-					sleep(2)
+					sleep(5)
 				end
 			end
 		end
