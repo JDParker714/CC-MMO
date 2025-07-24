@@ -31,10 +31,14 @@ local function lookupPlayer(id)
 	return nil
 end
 
--- Send balance update to server
+-- Send balance update to server (now with confirmation)
 local function updateBalance(id, amount)
 	local req = { type = "add_balance", id = id, amount = amount }
 	rednet.broadcast(textutils.serialize(req))
+	local _, raw = rednet.receive(3)
+	if not raw then return false end
+	local resp = textutils.unserialize(raw)
+	return resp and resp.status == "ok"
 end
 
 -- Check admin password via server
@@ -54,25 +58,12 @@ while true do
 	term.clear()
 	term.setCursorPos(1, 1)
 	print("=== Admin Purchase Terminal ===")
-	print("[1] Purchase")
-	print("[2] Exit")
-	write("> ")
-	local choice = read()
-
-	if choice == "2" then
-		print("Ejecting card...")
-		drive.ejectDisk()
-		sleep(1)
-		break
-	elseif choice ~= "1" then
-		print("Invalid choice.")
-		sleep(1)
-		goto continue
-	end
-
 	print("Please insert a player card...")
+
+	-- Wait for disk
 	while not drive.isDiskPresent() do sleep(0.5) end
 
+	-- Validate card
 	local id = getPlayerId()
 	if not id then
 		print("Invalid card. Ejecting.")
@@ -89,35 +80,54 @@ while true do
 		goto continue
 	end
 
-	print("Player: " .. player.name)
-	print("Balance: G" .. player.balance)
+	while true do
+		term.clear()
+		term.setCursorPos(1, 1)
+		print("=== Admin Purchase Menu ===")
+		print("Player: " .. player.name)
+		print("Balance: G" .. player.balance)
+		print("")
+		print("[1] Purchase")
+		print("[2] Eject Card")
+		write("> ")
+		local choice = read()
 
-	if not verifyAdmin() then
-		print("Incorrect admin password.")
-		sleep(2)
-		goto continue
+		if choice == "2" then
+			print("Ejecting card...")
+			drive.ejectDisk()
+			sleep(1)
+			goto continue
+		elseif choice ~= "1" then
+			print("Invalid choice.")
+			sleep(1)
+		else
+			if not verifyAdmin() then
+				print("Incorrect admin password.")
+				sleep(2)
+			else
+				write("Enter purchase amount to subtract: G")
+				local amt_str = read()
+				local amt = tonumber(amt_str)
+
+				if not amt or amt <= 0 or amt ~= math.floor(amt) then
+					print("Invalid amount.")
+					sleep(2)
+				elseif amt > player.balance then
+					print("Insufficient funds.")
+					sleep(2)
+				else
+					if updateBalance(id, -amt) then
+						print("Purchase complete! G" .. amt .. " removed.")
+						player.balance = player.balance - amt
+						print("New balance: G" .. player.balance)
+					else
+						print("Error: Could not contact server.")
+					end
+					sleep(2)
+				end
+			end
+		end
 	end
 
-	write("Enter purchase amount to subtract: G")
-	local amt_str = read()
-	local amt = tonumber(amt_str)
-
-	if not amt or amt <= 0 or amt ~= math.floor(amt) then
-		print("Invalid amount.")
-		sleep(2)
-		goto continue
-	end
-
-	if amt > player.balance then
-		print("Insufficient funds.")
-		sleep(2)
-		goto continue
-	end
-
-	updateBalance(id, -amt)
-	print("Purchase complete! G" .. amt .. " removed.")
-	print("New balance: G" .. (player.balance - amt))
-	sleep(2)
-
-::continue::
+	::continue::
 end
