@@ -71,8 +71,8 @@ while true do
 	print("Left:  " .. left_data.name .. " - G" .. left_data.balance)
 	print("Right: " .. right_data.name .. " - G" .. right_data.balance)
 	print()
-	print("[1] " .. left_data.name .. " → " .. right_data.name)
-	print("[2] " .. right_data.name .. " → " .. left_data.name)
+	print("[1] " .. left_data.name .. " -> " .. right_data.name)
+	print("[2] " .. right_data.name .. "-> " .. left_data.name)
 	print("[3] Exit")
 	write("> ")
 	local choice = read()
@@ -126,7 +126,7 @@ while true do
 	print(sender_data.name .. ": G" .. (sender_data.balance - amt))
 	print(receiver_data.name .. ": G" .. (receiver_data.balance + amt))
 
-	sleep(2)
+	sleep(5)
 
 ::continue::
 end
