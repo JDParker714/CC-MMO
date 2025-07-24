@@ -1,6 +1,8 @@
 -- master_server.lua
 -- wget https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/master_server.lua master_server.lua
 
+local ADMIN_PASSWORD = "#admin714"
+
 local data_file = "players.db"
 local modem = peripheral.find("modem", rednet.open)
 
@@ -48,6 +50,12 @@ while true do
 		save_db()
 		rednet.send(sender, textutils.serialize({ status = "balance_updated" }))
 		print("Updated balance for " .. player_db[data.id].name .. ": +" .. data.amount)
+	elseif data and data.type == "verify_admin" then
+		if data.password == ADMIN_PASSWORD then
+			rednet.send(sender, textutils.serialize({ status = "authorized" }))
+		else
+			rednet.send(sender, textutils.serialize({ status = "unauthorized" }))
+		end
 	else
 		rednet.send(sender, textutils.serialize({ status = "not_found" }))
 	end

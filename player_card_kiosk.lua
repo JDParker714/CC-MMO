@@ -25,6 +25,28 @@ local function createPlayerCard()
 		end
 	end
 
+	write("Enter admin password to create new card: ")
+	local admin_password = read("*")
+
+	local verify_request = {
+		type = "verify_admin",
+		password = admin_password
+	}
+
+	rednet.broadcast(textutils.serialize(verify_request))
+	local _, response_raw = rednet.receive(3)
+	if not response_raw then
+		print("Server did not respond.")
+		return
+	end
+
+	local response = textutils.unserialize(response_raw)
+	if response.status ~= "authorized" then
+		print("Incorrect admin password.")
+		disk_drive.ejectDisk()
+		return
+	end
+
 	write("Enter username: ")
 	local name = read()
 
