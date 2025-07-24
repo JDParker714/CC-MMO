@@ -15,3 +15,4 @@ for _, file in ipairs(files) do
 end
 
 print("Update complete.")
+--shell.run("wget", "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/master_server.lua?nocache=" .. tostring(os.clock()), "master_server.lua")

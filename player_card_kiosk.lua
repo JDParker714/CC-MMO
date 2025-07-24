@@ -154,7 +154,7 @@ while true do
 		readPlayerCard()
 	elseif choice == "3" then
 		print("Goodbye.")
-		break
+		disk_drive.ejectDisk()
 	else
 		print("Invalid option.")
 	end
