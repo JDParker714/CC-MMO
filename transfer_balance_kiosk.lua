@@ -3,10 +3,13 @@ local drive_left = peripheral.wrap("left")
 local drive_right = peripheral.wrap("right")
 
 -- Utility
-local function getPlayerId(side)
-	local path = "disk/.player_id"
-	if not fs.exists(side .. "/" .. path) then return nil end
-	local f = fs.open(side .. "/" .. path, "r")
+local function getPlayerIdFromDrive(drive)
+	if not drive.isDiskPresent() then return nil end
+	local mount = drive.getMountPath()
+	if not mount then return nil end
+	local path = mount .. "/.player_id"
+	if not fs.exists(path) then return nil end
+	local f = fs.open(path, "r")
 	local id = f.readAll()
 	f.close()
 	return id
@@ -35,8 +38,8 @@ end
 local function waitForCards()
 	print("Waiting for both player cards...")
 	while true do
-		local l_disk = drive_left.isDiskPresent() and getPlayerId("left")
-		local r_disk = drive_right.isDiskPresent() and getPlayerId("right")
+		local l_disk = drive_left.isDiskPresent() and getPlayerIdFromDrive("left")
+		local r_disk = drive_right.isDiskPresent() and getPlayerIdFromDrive("right")
 		if l_disk and r_disk then return l_disk, r_disk end
 		sleep(1)
 	end
