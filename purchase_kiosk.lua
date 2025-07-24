@@ -35,8 +35,8 @@ end
 local function updateBalance(id, amount)
 	local req = { type = "add_balance", id = id, amount = amount }
 	rednet.broadcast(textutils.serialize(req))
-	local sender, raw = rednet.receive(3)
-	if not raw or sender ~= trusted_sender then return false end
+	local _, raw = rednet.receive(3)
+	if not raw then return false end
 	local resp = textutils.unserialize(raw)
 	return resp and resp.status == "balance_updated"
 end
