@@ -88,6 +88,8 @@ while true do
 	local sold_total = 0
 	local last_sale_time = os.clock()
 
+	print("Your current balance: G" .. player.balance)
+
 	print("You may now place items in the input chest to sell.")
     local has_notified = false
 	while true do
@@ -108,7 +110,10 @@ while true do
 
 		if sold_total > 0 then
 			updateBalance(id, sold_total)
+			player.balance = player.balance + sold_total
 			print("G" .. sold_total .. " added to your balance.")
+			print("New balance: G" .. player.balance)
+			has_notified = false
 			sold_total = 0
 		end
 
