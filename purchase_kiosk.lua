@@ -33,12 +33,11 @@ end
 
 -- Send balance update to server (now with confirmation)
 local function updateBalance(id, amount)
-	local req = { type = "add_balance", id = id, amount = amount }
-	rednet.broadcast(textutils.serialize(req))
-	local _, raw = rednet.receive(3)
-	if not raw then return false end
-	local resp = textutils.unserialize(raw)
-	return resp and resp.status == "ok"
+	rednet.broadcast(textutils.serialize({
+		type = "add_balance",
+		id = id,
+		amount = amount
+	}))
 end
 
 -- Check admin password via server
@@ -87,7 +86,7 @@ while true do
 		print("Player: " .. player.name)
 		print("Balance: G" .. player.balance)
 		print("")
-		print("[1] Purchase")
+		print("[1] Purchase Item")
 		print("[2] Eject Card")
 		write("> ")
 		local choice = read()
