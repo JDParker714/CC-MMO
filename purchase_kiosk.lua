@@ -33,11 +33,12 @@ end
 
 -- Send balance update to server (now with confirmation)
 local function updateBalance(id, amount)
-	rednet.broadcast(textutils.serialize({
-		type = "add_balance",
-		id = id,
-		amount = amount
-	}))
+	local req = { type = "add_balance", id = id, amount = amount }
+	rednet.broadcast(textutils.serialize(req))
+	local sender, raw = rednet.receive(3)
+	if not raw or sender ~= trusted_sender then return false end
+	local resp = textutils.unserialize(raw)
+	return resp and resp.status == "balance_updated"
 end
 
 -- Check admin password via server
