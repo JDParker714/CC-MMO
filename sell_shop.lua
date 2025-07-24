@@ -166,6 +166,7 @@ while true do
 	::logout::
 
 	disk_drive.ejectDisk()
+	sleep(1)
 
 	::continue::
 end
