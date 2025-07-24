@@ -97,18 +97,18 @@ local function createPlayerCard()
 	local f = fs.open("disk/.player_id", "w")
 	f.write(id)
 	f.close()
-	disk_drive.setDiskLabel(name .. "'s disk")
+	disk_drive.setDiskLabel(name .. "'s Card")
 	print("Card created for " .. name .. " (ID: " .. id .. ")")
 end
 
 local function readPlayerCard()
 	if not fs.exists("disk") then
-		print("Please insert a floppy disk...")
+		print("Please insert a Credit Card...")
 		return
 	end
 
 	if not fs.exists("disk/.player_id") then
-		print("No .player_id found on disk.")
+		print("No .player_id found on this Card.")
 		return
 	end
 
