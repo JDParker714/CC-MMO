@@ -38,9 +38,9 @@ end
 local function waitForCards()
 	print("Waiting for both player cards...")
 	while true do
-		local l_disk = drive_left.isDiskPresent() and getPlayerIdFromDrive("left")
-		local r_disk = drive_right.isDiskPresent() and getPlayerIdFromDrive("right")
-		if l_disk and r_disk then return l_disk, r_disk end
+		local left_id = getPlayerIdFromDrive(drive_left)
+		local right_id = getPlayerIdFromDrive(drive_right)
+		if left_id and right_id then return left_id, right_id end
 		sleep(1)
 	end
 end
