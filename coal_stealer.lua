@@ -7,26 +7,46 @@ local coal_names = {
 
 -- === FUNCTIONS ===
 -- Check if an item is coal (or charcoal)
-local function isCoal(item)
+local function is_coal(item)
   return item and coal_names[item.name] or false
 end
 
--- Grab all items from the chest in front
-local function suckAll()
-  for i = 1, 16 do
-    turtle.select(i)
-    turtle.suck()
+local function suck_non_coal()
+  local chest = peripheral.wrap("front")
+  if not chest then
+    print("No chest in front!")
+    return
+  end
+
+  local items = chest.list()
+  for slot, item in pairs(items) do
+    if not is_coal(item) then
+      -- Select next empty slot in turtle
+      local inserted = false
+      for i = 1, 16 do
+        if turtle.getItemCount(i) == 0 then
+          turtle.select(i)
+          chest.pushItems(peripheral.getName(turtle), slot, item.count)
+          inserted = true
+          break
+        end
+      end
+      if not inserted then
+        print("Turtle inventory full!")
+        break
+      end
+    end
   end
 end
 
--- Deposit all non-coal items behind
-local function depositNonCoal()
+-- Deposit only non-coal items behind
+local function deposit_non_coal()
   turtle.turnLeft()
   turtle.turnLeft()
   for i = 1, 16 do
     turtle.select(i)
     local item = turtle.getItemDetail()
-    if item and not isCoal(item) then
+    if item and not is_coal(item) then
       turtle.drop()
     end
   end
@@ -36,7 +56,7 @@ end
 
 -- === MAIN LOOP ===
 while true do
-  suckAll()
-  depositNonCoal()
+  suck_non_coal()
+  deposit_non_coal()
   sleep(sleep_seconds)
 end
