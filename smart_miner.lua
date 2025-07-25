@@ -88,6 +88,7 @@ function digSafeDown()
 end
 
 function goTo(xTarget, yTarget, zTarget)
+  print("Moving to (" .. xTarget .. ", " .. yTarget .. ", " .. zTarget .. ")...")
   local x, y, z = getPosition()
 
   -- Move in X direction
@@ -109,6 +110,31 @@ function goTo(xTarget, yTarget, zTarget)
   -- Go to correct Y first (to avoid breaking chest on return)
   while y > yTarget do down(); y = y - 1 end
   while y < yTarget do up(); y = y + 1 end
+end
+
+function goFromHome(xTarget, yTarget, zTarget)
+  print("Moving to (" .. xTarget .. ", " .. yTarget .. ", " .. zTarget .. ")...")
+  local x, y, z = getPosition()
+
+  -- Go to correct Y first (to avoid breaking chest on return)
+  while y > yTarget do down(); y = y - 1 end
+  while y < yTarget do up(); y = y + 1 end
+
+  -- Move in X direction
+  if xTarget > x then face(1) else face(3) end
+  while x ~= xTarget do
+    digSafe()
+    forward()
+    x = (xTarget > x) and (x + 1) or (x - 1)
+  end
+
+  -- Move in Z direction
+  if zTarget > z then face(2) else face(0) end
+  while z ~= zTarget do
+    digSafe()
+    forward()
+    z = (zTarget > z) and (z + 1) or (z - 1)
+  end
 end
 
 function digVeins(depth)
@@ -232,19 +258,19 @@ function goToOffset(xOffset, zOffset, yTarget)
 end
 
 function mineTunnel(xOffset, zOffset, yLevel)
-  print("=== Mining tunnel at (" .. xOffset .. ", " .. zOffset .. ", Y=" .. yLevel .. ") ===")
   local absX = home_x + xOffset
   local absZ = home_z + zOffset
+  print("=== Mining tunnel at (" .. absX .. ", " .. absZ .. ", Y=" .. yLevel .. ") ===")
   if hasMined(absX, yLevel, absZ) then
     print("Already mined. Skipping...")
     return
   end
 
   print("Navigating to tunnel start...")
-  goToOffset(xOffset, zOffset, yLevel)
+  goFromHome(absX, yLevel, absZ)
 
   -- Tunnel direction based on X to alternate rows
-  if xOffset % 2 == 0 then face(2) else face(0) end
+  if zOffset % 2 == 0 then face(2) else face(0) end
 
   for i = 1, tunnel_length do
     digSafe()
@@ -254,8 +280,6 @@ function mineTunnel(xOffset, zOffset, yLevel)
 
     if isInventoryFull() then
       print("[Inventory full] Returning to drop off...")
-      absX = home_x + xOffset
-      absZ = home_z + zOffset
       saveMined(absX, yLevel, absZ)
       returnHome()
       dropOff()
@@ -265,8 +289,6 @@ function mineTunnel(xOffset, zOffset, yLevel)
     refuelIfNeeded()
   end
 
-  absX = home_x + xOffset
-  absZ = home_z + zOffset
   saveMined(absX, yLevel, absZ)
   
 end
