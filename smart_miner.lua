@@ -46,6 +46,7 @@ function getPosition()
   local x, y, z = gps.locate(2)
   return x, y, z
 end
+
 function face(dir)
   local diff = (dir - facing) % 4
   if diff == 0 then
@@ -70,6 +71,10 @@ function forward()
     turtle.dig()
     sleep(0.2)
   end
+end
+
+function back()
+  turtle.back()
 end
 
 function up()
@@ -165,34 +170,34 @@ function digVeins(depth)
   local f0 = facing
 
   -- Define direction handlers
-  local function tryDig(dirFunc, moveFunc, backFunc, inspectFunc, digFunc)
+  local function tryDig(inspectFunc, digFunc, moveFunc, backFunc, d)
     local success, data = inspectFunc()
     if success and isOre(data.name) then
       digFunc()
       moveFunc()
-      digVeins(depth - 1)
+      digVeins(d - 1)
       backFunc()
     end
   end
 
   -- Forward
-  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
+  tryDig(turtle.inspect, turtle.dig, forward, back, depth)
 
   -- Up
-  tryDig(nil, up, down, turtle.inspectUp, turtle.digUp)
+  tryDig(turtle.inspectUp, turtle.digUp, up, down, depth)
 
   -- Down
-  tryDig(nil, down, up, turtle.inspectDown, turtle.digDown)
+  tryDig(turtle.inspectDown, turtle.digDown, down, up, depth)
 
   -- Left
   face((f0 + 3) % 4)
-  tryDig(turtle.inspect, turtle.dig, forward, back)
+  tryDig(turtle.inspect, turtle.dig, forward, back, depth)
   goTo(x0, y0, z0)
   face(f0)
 
   -- Right
   face((f0 + 1) % 4)
-  tryDig(turtle.inspect, turtle.dig, forward, back)
+  tryDig(turtle.inspect, turtle.dig, forward, back, depth)
   goTo(x0, y0, z0)
   face(f0)
 end
