@@ -192,13 +192,11 @@ function digVeins(depth)
   -- Left
   face((f0 + 3) % 4)
   tryDig(turtle.inspect, turtle.dig, forward, back, depth)
-  goTo(x0, y0, z0)
   face(f0)
 
   -- Right
   face((f0 + 1) % 4)
   tryDig(turtle.inspect, turtle.dig, forward, back, depth)
-  goTo(x0, y0, z0)
   face(f0)
 end
 
@@ -279,7 +277,7 @@ function goToOffset(xOffset, zOffset, yTarget)
   goTo(xTarget, yTarget, zTarget)
 end
 
-function mineTunnel(xOffset, zOffset, yLevel)
+function mineTunnel(xOffset, zOffset, yLevel, forward)
   local absX = home_x + xOffset
   local absZ = home_z + zOffset
   print("=== Mining tunnel at (" .. absX .. ", " .. absZ .. ", Y=" .. yLevel .. ") ===")
@@ -292,12 +290,12 @@ function mineTunnel(xOffset, zOffset, yLevel)
   goFromHome(absX, yLevel, absZ)
 
   -- Tunnel direction based on X to alternate rows
-  if zOffset % 2 == 0 then face(2) else face(0) end
+  if forward then face(0) else face(2) end
 
   for i = 1, tunnel_length do
     digSafe()
     forward()
-    digVeins(3)
+    digVeins(5)
     print("Progress: " .. i .. "/" .. tunnel_length)
 
     if isInventoryFull() then
@@ -316,19 +314,14 @@ function mineTunnel(xOffset, zOffset, yLevel)
 end
 
 function mineGridLayer(y)
+  print("Mining Y Level: " .. y)
   for row = 0, math.floor((radius * 2) / spacing) do
-    local zOffset = -radius + row * spacing
+    local xOffset = -radius + row * spacing
     local forward = (row % 2 == 0)
 
-    if forward then
-      for xOffset = -radius, radius, spacing do
-        mineTunnel(xOffset, zOffset, y)
-      end
-    else
-      for xOffset = radius, -radius, -spacing do
-        mineTunnel(xOffset, zOffset, y)
-      end
-    end
+    local zOffset = forward and -radius or radius
+
+    mineTunnel(xOffset, zOffset, y, forward)
   end
 end
 
