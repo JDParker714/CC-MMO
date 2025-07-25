@@ -87,20 +87,63 @@ function digSafeDown()
   turtle.digDown()
 end
 
-function digVeins()
-  local directions = {
-    {turtle.inspect, turtle.dig},
-    {turtle.inspectUp, turtle.digUp},
-    {turtle.inspectDown, turtle.digDown},
-  }
+function digVeins(depth)
+  if depth == 0 then return end
+  local original_facing = facing
 
-  for _, dir in ipairs(directions) do
-    local inspect, dig = unpack(dir)
-    local success, data = inspect()
+  -- Directional helper
+  local function tryDigDirection(turnFn, moveFn, backFn, inspectFn, digFn)
+    turnFn()
+    local success, data = inspectFn()
     if success and data.name:find("ore") then
-      dig()
+      digFn()
+      if moveFn() then
+        digVeins(depth - 1)
+        backFn()
+      end
+    end
+    -- Return to original facing
+    face(original_facing)
+  end
+
+  -- Forward
+  local success, data = turtle.inspect()
+  if success and data.name:find("ore") then
+    turtle.dig()
+    if turtle.forward() then
+      digVeins(depth - 1)
+      turtle.back()
     end
   end
+
+  -- Up
+  success, data = turtle.inspectUp()
+  if success and data.name:find("ore") then
+    turtle.digUp()
+    if turtle.up() then
+      digVeins(depth - 1)
+      turtle.down()
+    end
+  end
+
+  -- Down
+  success, data = turtle.inspectDown()
+  if success and data.name:find("ore") then
+    turtle.digDown()
+    if turtle.down() then
+      digVeins(depth - 1)
+      turtle.up()
+    end
+  end
+
+  -- Left
+  tryDigDirection(turtle.turnLeft, turtle.forward, turtle.back, turtle.inspect, turtle.dig)
+
+  -- Right
+  tryDigDirection(turtle.turnRight, turtle.forward, turtle.back, turtle.inspect, turtle.dig)
+
+  -- Face original direction at end
+  face(original_facing)
 end
 
 function isInventoryFull()
@@ -162,14 +205,15 @@ end
 function returnHome()
   print("Returning home to (" .. home_x .. ", " .. home_y .. ", " .. home_z .. ")...")
   local x, y, z = getPosition()
-  while y < home_y do up() y = y + 1 end
-  while y > home_y do down() y = y - 1 end
 
   if x > home_x then face(3) while x > home_x do forward() x = x - 1 end
   elseif x < home_x then face(1) while x < home_x do forward() x = x + 1 end end
 
   if z > home_z then face(0) while z > home_z do forward() z = z - 1 end
   elseif z < home_z then face(2) while z < home_z do forward() z = z + 1 end end
+
+  while y < home_y do up() y = y + 1 end
+  while y > home_y do down() y = y - 1 end
   print("Arrived at home.")
 end
 
@@ -212,7 +256,7 @@ function mineTunnel(xOffset, zOffset, yLevel)
   for i = 1, tunnel_length do
     digSafe()
     forward()
-    digVeins()
+    digVeins(3)
     print("Progress: " .. i .. "/" .. tunnel_length)
 
     if isInventoryFull() then
@@ -228,6 +272,23 @@ function mineTunnel(xOffset, zOffset, yLevel)
 
   saveMined(xOffset, yLevel, zOffset)
   
+end
+
+function mineGridLayer(y)
+  for row = 0, math.floor((radius * 2) / spacing) do
+    local zOffset = -radius + row * spacing
+    local forward = (row % 2 == 0)
+
+    if forward then
+      for xOffset = -radius, radius, spacing do
+        mineTunnel(xOffset, zOffset, y)
+      end
+    else
+      for xOffset = radius, -radius, -spacing do
+        mineTunnel(xOffset, zOffset, y)
+      end
+    end
+  end
 end
 
 -- == MAIN ==
@@ -246,11 +307,7 @@ loadMinedDB()
 refuelIfNeeded()
 
 for y = max_y, min_y, -3 do
-  for dx = -radius, radius, spacing do
-    for dz = -radius, radius, spacing do
-      mineTunnel(dx, dz, y)
-    end
-  end
+  mineGridLayer(y)
 end
 
 print("Mining complete.")
