@@ -3,7 +3,6 @@
 
 -- == CONFIG ==
 local spacing = 3  -- spacing between tunnels (3 = skip 2 blocks)
-local tunnel_length = 20 -- distance forward for each tunnel
 local FUEL_BUFFER = 20   -- safety margin
 local REFUEL_ITEM = "minecraft:coal"
 
@@ -277,7 +276,7 @@ function goToOffset(xOffset, zOffset, yTarget)
   goTo(xTarget, yTarget, zTarget)
 end
 
-function mineTunnel(xOffset, zOffset, yLevel, is_forward)
+function mineTunnel(xOffset, zOffset, yLevel, is_forward, tunnel_length)
   local absX = home_x + xOffset
   local absZ = home_z + zOffset
   print("=== Mining tunnel at (" .. absX .. ", " .. absZ .. ", Y=" .. yLevel .. ") ===")
@@ -321,7 +320,7 @@ function mineGridLayer(y)
 
     local zOffset = is_forward and -radius or radius
 
-    mineTunnel(xOffset, zOffset, y, is_forward)
+    mineTunnel(xOffset, zOffset, y, is_forward, radius * 2)
   end
 end
 
