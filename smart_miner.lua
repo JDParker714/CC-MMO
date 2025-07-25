@@ -46,11 +46,22 @@ function getPosition()
   local x, y, z = gps.locate(2)
   return x, y, z
 end
-
 function face(dir)
-  while facing ~= dir do
+  local diff = (dir - facing) % 4
+  if diff == 0 then
+    return -- Already facing correct direction
+  elseif diff == 1 then
     turtle.turnRight()
     facing = (facing + 1) % 4
+  elseif diff == 2 then
+    turtle.turnRight()
+    facing = (facing + 1) % 4
+    turtle.turnRight()
+    facing = (facing + 1) % 4
+  elseif diff == 3 then
+    turtle.turnLeft()
+    facing = (facing - 1) % 4
+    if facing < 0 then facing = facing + 4 end
   end
 end
 
@@ -174,18 +185,14 @@ function digVeins(depth)
   tryDig(nil, down, up, turtle.inspectDown, turtle.digDown)
 
   -- Left
-  face((facing + 3) % 4)  -- turn left
-  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
+  face((f0 + 3) % 4)
+  tryDig(turtle.inspect, turtle.dig, forward, back)
   goTo(x0, y0, z0)
   face(f0)
 
   -- Right
-  face((facing + 1) % 4)  -- turn right
-  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
-  goTo(x0, y0, z0)
-  face(f0)
-
-  -- Final restore (redundant but safe)
+  face((f0 + 1) % 4)
+  tryDig(turtle.inspect, turtle.dig, forward, back)
   goTo(x0, y0, z0)
   face(f0)
 end
@@ -331,6 +338,7 @@ print("Home set to:", home_x, home_y, home_z)
 print("Which way is the chest? Enter direction (0=north, 1=east, 2=south, 3=west):")
 facing = tonumber(read())
 home_facing = facing
+face(facing)
 
 loadMinedDB()
 refuelIfNeeded()
