@@ -277,7 +277,7 @@ function goToOffset(xOffset, zOffset, yTarget)
   goTo(xTarget, yTarget, zTarget)
 end
 
-function mineTunnel(xOffset, zOffset, yLevel, forward)
+function mineTunnel(xOffset, zOffset, yLevel, is_forward)
   local absX = home_x + xOffset
   local absZ = home_z + zOffset
   print("=== Mining tunnel at (" .. absX .. ", " .. absZ .. ", Y=" .. yLevel .. ") ===")
@@ -290,7 +290,7 @@ function mineTunnel(xOffset, zOffset, yLevel, forward)
   goFromHome(absX, yLevel, absZ)
 
   -- Tunnel direction based on X to alternate rows
-  if forward then face(0) else face(2) end
+  if is_forward then face(2) else face(0) end
 
   for i = 1, tunnel_length do
     digSafe()
@@ -317,11 +317,11 @@ function mineGridLayer(y)
   print("Mining Y Level: " .. y)
   for row = 0, math.floor((radius * 2) / spacing) do
     local xOffset = -radius + row * spacing
-    local forward = (row % 2 == 0)
+    local is_forward = (row % 2 == 0)
 
-    local zOffset = forward and -radius or radius
+    local zOffset = is_forward and -radius or radius
 
-    mineTunnel(xOffset, zOffset, y, forward)
+    mineTunnel(xOffset, zOffset, y, is_forward)
   end
 end
 
