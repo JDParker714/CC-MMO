@@ -137,6 +137,16 @@ function goFromHome(xTarget, yTarget, zTarget)
   end
 end
 
+function isOre(blockName)
+  local ore_keywords = {"ore", "raw", "ancient_debris"}
+  for _, keyword in ipairs(ore_keywords) do
+    if blockName:find(keyword) then
+      return true
+    end
+  end
+  return false
+end
+
 function digVeins(depth)
   if depth <= 0 then return end
 
