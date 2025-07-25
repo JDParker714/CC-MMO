@@ -87,63 +87,71 @@ function digSafeDown()
   turtle.digDown()
 end
 
-function digVeins(depth)
-  if depth == 0 then return end
-  local original_facing = facing
+function goTo(xTarget, yTarget, zTarget)
+  local x, y, z = getPosition()
 
-  -- Directional helper
-  local function tryDigDirection(turnFn, moveFn, backFn, inspectFn, digFn)
-    turnFn()
-    local success, data = inspectFn()
-    if success and data.name:find("ore") then
-      digFn()
-      if moveFn() then
-        digVeins(depth - 1)
-        backFn()
-      end
+  -- Move in X direction
+  if xTarget > x then face(1) else face(3) end
+  while x ~= xTarget do
+    digSafe()
+    forward()
+    x = (xTarget > x) and (x + 1) or (x - 1)
+  end
+
+  -- Move in Z direction
+  if zTarget > z then face(2) else face(0) end
+  while z ~= zTarget do
+    digSafe()
+    forward()
+    z = (zTarget > z) and (z + 1) or (z - 1)
+  end
+
+  -- Go to correct Y first (to avoid breaking chest on return)
+  while y > yTarget do down(); y = y - 1 end
+  while y < yTarget do up(); y = y + 1 end
+end
+
+function digVeins(depth)
+  if depth <= 0 then return end
+
+  local x0, y0, z0 = getPosition()
+  local f0 = facing
+
+  -- Define direction handlers
+  local function tryDig(dirFunc, moveFunc, backFunc, inspectFunc, digFunc)
+    local success, data = inspectFunc()
+    if success and isOre(data.name) then
+      digFunc()
+      moveFunc()
+      digVeins(depth - 1)
+      backFunc()
     end
-    -- Return to original facing
-    face(original_facing)
   end
 
   -- Forward
-  local success, data = turtle.inspect()
-  if success and data.name:find("ore") then
-    turtle.dig()
-    if turtle.forward() then
-      digVeins(depth - 1)
-      turtle.back()
-    end
-  end
+  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
 
   -- Up
-  success, data = turtle.inspectUp()
-  if success and data.name:find("ore") then
-    turtle.digUp()
-    if turtle.up() then
-      digVeins(depth - 1)
-      turtle.down()
-    end
-  end
+  tryDig(nil, up, down, turtle.inspectUp, turtle.digUp)
 
   -- Down
-  success, data = turtle.inspectDown()
-  if success and data.name:find("ore") then
-    turtle.digDown()
-    if turtle.down() then
-      digVeins(depth - 1)
-      turtle.up()
-    end
-  end
+  tryDig(nil, down, up, turtle.inspectDown, turtle.digDown)
 
   -- Left
-  tryDigDirection(turtle.turnLeft, turtle.forward, turtle.back, turtle.inspect, turtle.dig)
+  face((facing + 3) % 4)  -- turn left
+  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
+  goTo(x0, y0, z0)
+  face(f0)
 
   -- Right
-  tryDigDirection(turtle.turnRight, turtle.forward, turtle.back, turtle.inspect, turtle.dig)
+  face((facing + 1) % 4)  -- turn right
+  tryDig(nil, forward, back, turtle.inspect, turtle.dig)
+  goTo(x0, y0, z0)
+  face(f0)
 
-  -- Face original direction at end
-  face(original_facing)
+  -- Final restore (redundant but safe)
+  goTo(x0, y0, z0)
+  face(f0)
 end
 
 function isInventoryFull()
@@ -218,31 +226,16 @@ function returnHome()
 end
 
 function goToOffset(xOffset, zOffset, yTarget)
-  -- From home position
-  local x, y, z = getPosition()
-  
-  -- Go to Y level first
-  while y > yTarget do digSafeDown(); down(); y = y - 1 end
-  while y < yTarget do up(); y = y + 1 end
-
-  -- Move in X direction
-  if xOffset > 0 then face(1) else face(3) end
-  for i = 1, math.abs(xOffset) do
-    digSafe()
-    forward()
-  end
-
-  -- Move in Z direction
-  if zOffset > 0 then face(2) else face(0) end
-  for i = 1, math.abs(zOffset) do
-    digSafe()
-    forward()
-  end
+  local xTarget = home_x + xOffset
+  local zTarget = home_z + zOffset
+  goTo(xTarget, yTarget, zTarget)
 end
 
 function mineTunnel(xOffset, zOffset, yLevel)
   print("=== Mining tunnel at (" .. xOffset .. ", " .. zOffset .. ", Y=" .. yLevel .. ") ===")
-  if hasMined(xOffset, yLevel, zOffset) then
+  local absX = home_x + xOffset
+  local absZ = home_z + zOffset
+  if hasMined(absX, yLevel, absZ) then
     print("Already mined. Skipping...")
     return
   end
@@ -250,8 +243,8 @@ function mineTunnel(xOffset, zOffset, yLevel)
   print("Navigating to tunnel start...")
   goToOffset(xOffset, zOffset, yLevel)
 
-  -- Tunnel direction based on Z to alternate rows
-  if zOffset % 2 == 0 then face(1) else face(3) end
+  -- Tunnel direction based on X to alternate rows
+  if xOffset % 2 == 0 then face(2) else face(0) end
 
   for i = 1, tunnel_length do
     digSafe()
@@ -261,7 +254,9 @@ function mineTunnel(xOffset, zOffset, yLevel)
 
     if isInventoryFull() then
       print("[Inventory full] Returning to drop off...")
-      saveMined(xOffset, yLevel, zOffset)
+      absX = home_x + xOffset
+      absZ = home_z + zOffset
+      saveMined(absX, yLevel, absZ)
       returnHome()
       dropOff()
       refuelIfNeeded()
@@ -270,7 +265,9 @@ function mineTunnel(xOffset, zOffset, yLevel)
     refuelIfNeeded()
   end
 
-  saveMined(xOffset, yLevel, zOffset)
+  absX = home_x + xOffset
+  absZ = home_z + zOffset
+  saveMined(absX, yLevel, absZ)
   
 end
 
