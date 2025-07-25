@@ -18,13 +18,14 @@ while true do
     sleep(sleep_seconds)
   else
     local items = chest.list()
-    for chest_slot, item in pairs(items) do
+
+    for slot, item in pairs(items) do
       if not is_coal(item) then
-        -- Find a free turtle slot
-        for turtle_slot = 1, 16 do
-          if turtle.getItemCount(turtle_slot) == 0 then
-            turtle.select(turtle_slot)
-            chest.pullItems("front", chest_slot, item.count)
+        -- Find free slot in turtle
+        for i = 1, 16 do
+          if turtle.getItemCount(i) == 0 then
+            turtle.select(i)
+            chest.pushItems("back", slot, item.count)
             break
           end
         end
@@ -32,7 +33,7 @@ while true do
     end
   end
 
-  -- Turn and drop non-coal items
+  -- Turn around and drop non-coal items
   turtle.turnLeft()
   turtle.turnLeft()
   for i = 1, 16 do
