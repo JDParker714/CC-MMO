@@ -44,19 +44,34 @@ end
 
 -- Mine multiple layers down
 function mineCube(x, y, z)
+    local facingRight = true
+
     for depth = 1, z do
         mineLayer(x, y)
+
+        -- Return to starting X/Y position of layer
+        if (y % 2 == 1) then
+            -- We're at end of last row, facing same direction
+            turtle.turnLeft()
+            turtle.turnLeft()
+            for i = 1, x - 1 do turtle.forward() end
+        end
+
+        if (y > 1) then
+            -- Move back through rows
+            for i = 1, y - 1 do
+                turtle.forward()
+            end
+        end
+
+        -- Face original direction
+        turtle.turnLeft()
+        turtle.turnLeft()
+
+        -- Go down
         if depth < z then
-            if turtle.detectDown() then
-                turtle.digDown()
-                sleep(0.3)
-            end
+            if turtle.detectDown() then turtle.digDown() end
             turtle.down()
-            -- Face original direction
-            if (y % 2 == 0) then
-                turtle.turnLeft()
-                turtle.turnLeft()
-            end
         end
     end
 
