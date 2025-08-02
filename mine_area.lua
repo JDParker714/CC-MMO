@@ -30,8 +30,8 @@ function nextRow(isRight)
     turn(isRight)
 end
 
--- Main mining logic
-function mineArea(x, y)
+-- Mine one horizontal layer (X by Y)
+function mineLayer(x, y)
     local right = true
     for row = 1, y do
         mineLine(x)
@@ -39,6 +39,30 @@ function mineArea(x, y)
             nextRow(right)
             right = not right
         end
+    end
+end
+
+-- Mine multiple layers down
+function mineCube(x, y, z)
+    for depth = 1, z do
+        mineLayer(x, y)
+        if depth < z then
+            if turtle.detectDown() then
+                turtle.digDown()
+                sleep(0.3)
+            end
+            turtle.down()
+            -- Face original direction
+            if (y % 2 == 0) then
+                turtle.turnLeft()
+                turtle.turnLeft()
+            end
+        end
+    end
+
+    -- Return to surface
+    for up = 1, z - 1 do
+        turtle.up()
     end
 end
 
@@ -62,21 +86,21 @@ end
 -- Parse args
 local tArgs = {...}
 if #tArgs < 2 then
-    print("Usage: mine_rectangle <x> <y>")
+    print("Usage: mine_rectangle <x> <y> <z>")
     return
 end
 
 local x = tonumber(tArgs[1])
 local y = tonumber(tArgs[2])
+local z = tonumber(tArgs[3]) or 1
 
-if not x or not y then
+if not x or not y or x < 1 or y < 1 or z < 1 then
     print("Invalid dimensions.")
     return
 end
 
--- Estimate fuel needed
-local estimatedFuel = x * y + y  -- some buffer for turning
+local estimatedFuel = x * y * z + y * z + z  -- conservative estimate
 if not ensureFuel(estimatedFuel) then return end
 
-mineArea(x, y)
+mineCube(x, y, z)
 print("Mining complete.")
