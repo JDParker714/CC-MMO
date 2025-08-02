@@ -44,36 +44,41 @@ end
 
 -- Mine multiple layers down
 function mineCube(x, y, z)
-    -- Assume starting position is (0,0), facing forward
     for depth = 1, z do
         mineLayer(x, y)
 
-        -- Return to starting position of the layer
-        local facingRight = (y % 2 == 0)  -- if even rows, ends at start row
-        if y > 1 then
-            for i = 1, y - 1 do
-                turtle.forward()
-            end
+        -- Now: move to (0, 0), top-left corner, facing original direction
+
+        -- Step 1: Determine final position
+        -- We're at:
+        -- - x-1 forward/back depending on snake
+        -- - y-1 to the right (since we went row by row)
+        -- We'll always unwind both
+
+        -- If last row ended facing opposite dir and on far X edge
+        if y % 2 == 1 then
+            turtle.turnLeft()
+            turtle.turnLeft()
+            for i = 1, x - 1 do turtle.forward() end
         end
 
-        if (y % 2 == 1) then
-            -- At far edge of last row, move back across X
+        -- Now walk back through rows
+        for i = 1, y - 1 do
+            turtle.turnRight()
+            digForward()
             turtle.turnLeft()
-            turtle.turnLeft()
-            for i = 1, x - 1 do
-                turtle.forward()
-            end
         end
 
         -- Face original direction
-        turtle.turnLeft()
-        turtle.turnLeft()
+        if y % 2 == 0 then
+            turtle.turnLeft()
+            turtle.turnLeft()
+        end
 
-        -- Go down to next layer
+        -- Go down
         if depth < z then
             if turtle.detectDown() then
                 turtle.digDown()
-                sleep(0.3)
             end
             turtle.down()
         end
