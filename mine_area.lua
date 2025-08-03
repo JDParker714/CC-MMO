@@ -63,11 +63,11 @@ function mineCube(x, y, z)
         end
 
         -- Now walk back through rows
+        turtle.turnRight()
         for i = 1, y - 1 do
-            turtle.turnRight()
             digForward()
-            turtle.turnLeft()
         end
+        turtle.turnRight()
 
         -- Face original direction
         if y % 2 == 0 then
