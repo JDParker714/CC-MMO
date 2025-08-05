@@ -102,11 +102,15 @@ local function waitForOwnerCard()
     local markup = 1 + (markup_percent / 100)
     disk_drive.ejectDisk()
     sleep(1)
-    return owner.id, markup
+    return id, markup
 end
 
 local owner_id, markup = waitForOwnerCard()
-if not owner_id then return end
+
+if not owner_id then 
+    print("Invalid Owner")
+    return 
+end
 
 while true do
     print("\n=== Buy Shop Terminal ===")
@@ -169,7 +173,7 @@ while true do
         end
 
         if purchase_total > 0 then
-            updateBalance(player.id, -purchase_total)         -- deduct from buyer
+            updateBalance(id, -purchase_total)         -- deduct from buyer
             updateBalance(owner_id, purchase_total)           -- give to shop owner_id
             player.balance = player.balance - purchase_total
             -- Move items
