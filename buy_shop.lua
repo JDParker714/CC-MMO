@@ -102,7 +102,7 @@ local function waitForOwnerCard()
     local markup = 1 + (markup_percent / 100)
     disk_drive.ejectDisk()
     sleep(1)
-    return id, markup
+    return owner.id, markup
 end
 
 local owner_id, markup = waitForOwnerCard()
@@ -156,12 +156,12 @@ while true do
         for slot, item in pairs(items) do
             local price = price_table[item.name]
             if price then
-                local cost = price * item.count
+                local cost = math.ceil(price * item.count * (markup))
                 if (player.balance - purchase_total) >= cost then
                     table.insert(purchase_slots, { slot = slot, cost = cost, name = item.name, count = item.count })
                     purchase_total = purchase_total + cost
                 else
-                    print("Not enough funds to buy " .. item.count .. "x " .. item.name)
+                    print("Not enough funds to buy " .. item.count .. "x " .. item.name .. "for G" .. purchase_total)
                     print("Hah, fucking brokie.")
                     goto logout
                 end
