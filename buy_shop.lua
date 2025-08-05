@@ -175,15 +175,22 @@ while true do
         if purchase_total > 0 then
             updateBalance(id, -purchase_total)         -- deduct from buyer
             updateBalance(owner_id, purchase_total)           -- give to shop owner_id
-            player.balance = player.balance - purchase_total
+
             -- Move items
             for _, p in ipairs(purchase_slots) do
                 stock_chest.pushItems(peripheral.getName(player_chest), p.slot)
                 print("Purchased " .. p.count .. "x " .. p.name .. " for G" .. p.cost)
                 sleep(0.5)
             end
-            print("Total spent: G" .. purchase_total)
-            print("New balance: G" .. player.balance)
+
+            if id == owner_id then
+                print("Total spent: G0 - You bought from yourself dumbass")
+                print("New balance: G" .. player.balance)
+            else
+                player.balance = player.balance - purchase_total
+                print("Total spent: G" .. purchase_total)
+                print("New balance: G" .. player.balance)
+            end
             has_notified = false
             last_action_time = os.clock()
         end
