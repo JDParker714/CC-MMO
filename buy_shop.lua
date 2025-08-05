@@ -64,6 +64,50 @@ local function waitForPlayerDisk()
     end
 end
 
+local function waitForOwnerCard()
+    print("=== Shop Owner Setup ===")
+    print("Insert your player card (owner)...")
+    while not fs.exists("disk/.player_id") do sleep(0.5) end
+
+    local id = readPlayerId()
+    local owner = lookupPlayer(id)
+
+    if not owner then
+        print("Invalid card. Ejecting.")
+        disk_drive.ejectDisk()
+        sleep(2)
+        return nil, nil
+    end
+
+    write("Enter password: ")
+    local pass = read("*")
+    if pass ~= owner.password then
+        print("Incorrect password.")
+        disk_drive.ejectDisk()
+        sleep(2)
+        return nil, nil
+    end
+
+    print("Welcome, " .. owner.name .. "!")
+
+    write("Enter markup percentage (e.g. 20 for +20%): ")
+    local markup_str = read()
+    local markup_percent = tonumber(markup_str)
+
+    if not markup_percent or markup_percent < 0 then
+        print("Invalid markup. Defaulting to 0%.")
+        markup_percent = 0
+    end
+
+    local markup = 1 + (markup_percent / 100)
+    disk_drive.ejectDisk()
+    sleep(1)
+    return id, markup
+end
+
+local owner_id, markup = waitForOwnerCard()
+if not owner_id then return end
+
 while true do
     print("\n=== Buy Shop Terminal ===")
     print("Insert your player card to begin...")
@@ -118,13 +162,15 @@ while true do
                     purchase_total = purchase_total + cost
                 else
                     print("Not enough funds to buy " .. item.count .. "x " .. item.name)
+                    print("Hah, fucking brokie.")
+                    goto logout
                 end
             end
         end
 
         if purchase_total > 0 then
-            -- Deduct funds
-            updateBalance(id, -purchase_total)
+            updateBalance(player.id, -purchase_total)         -- deduct from buyer
+            updateBalance(owner_id, purchase_total)           -- give to shop owner_id
             player.balance = player.balance - purchase_total
             -- Move items
             for _, p in ipairs(purchase_slots) do
