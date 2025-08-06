@@ -13,6 +13,7 @@ local item_prices = {
     ["minecraft:pumpkin"] = 3,
     ["minecraft:melon_slice"] = 1,
     ["minecraft:nether_wart"] = 1,
+	["minecraft:cocoa_beans"] = 1,
 	["minecraft:red_mushroom"] = 2,
 	["minecraft:brown_mushroom"] = 2,
 	["minecraft:glow_berries"] = 2,
@@ -57,6 +58,19 @@ local item_prices = {
 	["minecolonies:peas"] = 5,
 	["minecolonies:mint"] = 8,
     ["minecolonies:corn"] = 5,
+
+	["minersdelight:cave_carrot"] = 1,
+
+	-- Fruit
+	["fruitsdelight:pear"] = 1,
+	["fruitsdelight:lychee"] = 1,
+	["fruitsdelight:mango"] = 2,
+	["fruitsdelight:persimmon"] = 1,
+	["fruitsdelight:peach"] = 1,
+	["fruitsdelight:orange"] = 1,
+	["fruitsdelight:kiwi"] = 1,
+	["fruitsdelight:lemon"] = 1,
+	["fruitsdelight:pineapple"] = 2,
 
 	-- Common ores
 	["minecraft:coal"] = 10,
