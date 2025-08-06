@@ -122,7 +122,7 @@ while true do
 	updateBalance(receiver_id, amt)
 
 	print("Transfer complete!")
-    print(sender_data.name .. "Sent G" .. amt .. " to " .. receiver_data.name)
+	print(sender_data.name .. "Sent G" .. amt .. " to " .. receiver_data.name)
 	print(sender_data.name .. ": G" .. (sender_data.balance - amt))
 	print(receiver_data.name .. ": G" .. (receiver_data.balance + amt))
 

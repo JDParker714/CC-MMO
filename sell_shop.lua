@@ -116,7 +116,7 @@ while true do
 	print("Your current balance: G" .. player.balance)
 
 	print("You may now place items in the input chest to sell.")
-    local has_notified = false
+	local has_notified = false
 	while true do
 		local items = input_chest.list()
 		local sold_something = false
@@ -143,11 +143,11 @@ while true do
 		end
 
 		-- Wait 2s and check for logout or timeout
-        if not has_notified then
-		    print("Press ENTER to log out, or place more items...")
-            has_notified = true
-        end
-        
+		if not has_notified then
+			print("Press ENTER to log out, or place more items...")
+			has_notified = true
+		end
+		
 		local timer = os.startTimer(2)
 		while true do
 			local event, param = os.pullEventRaw()
