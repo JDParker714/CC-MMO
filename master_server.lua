@@ -4,8 +4,71 @@
 local ADMIN_PASSWORD = "#admin714"
 
 local item_prices = {
-	["minecraft:carrot"] = 1,
-	["minecraft:gunpowder"] = 5
+    -- Vanilla crops
+    ["minecraft:wheat"] = 1,
+    ["minecraft:potato"] = 1,
+    ["minecraft:carrot"] = 1,
+    ["minecraft:beetroot"] = 1,
+    ["minecraft:sugar_cane"] = 1,
+    ["minecraft:pumpkin"] = 3,
+    ["minecraft:melon_slice"] = 1,
+    ["minecraft:nether_wart"] = 1,
+	["minecraft:red_mushroom"] = 2,
+	["minecraft:brown_mushroom"] = 2,
+	["minecraft:glow_berries"] = 2,
+
+    -- Cactus
+    ["minecraft:cactus"] = 2,
+
+    -- Eggs
+    ["minecraft:egg"] = 2,
+
+    -- Raw meats
+    ["minecraft:beef"] = 10,
+    ["minecraft:chicken"] = 10,
+    ["minecraft:porkchop"] = 10,
+    ["minecraft:mutton"] = 10,
+    ["minecraft:rabbit"] = 10,
+
+    -- Aquaculture
+    ["aquaculture:fish_fillet_raw"] = 5,
+
+    -- Farmer's Delight / Rustic Delight / Expanded Delight crops
+    ["farmersdelight:cabbage"] = 1,
+    ["farmersdelight:tomato"] = 1,
+    ["farmersdelight:onion"] = 1,
+    ["farmersdelight:rice"] = 1,
+    ["rusticdelight:bell_pepper_red"] = 1,
+	["rusticdelight:bell_pepper_green"] = 1,
+	["rusticdelight:bell_pepper_yellow"] = 1,
+	["rusticdelight:coffee_beans"] = 1,
+    ["expandeddelight:asparagus"] = 1,
+    ["expandeddelight:sweet_potato"] = 1,
+    ["expandeddelight:chili_pepper"] = 1,
+    ["expandeddelight:peanut"] = 1,
+
+    -- Minecolonies exclusive crops (example entries)
+    ["minecolonies:eggplant"] = 5,
+    ["minecolonies:garlic"] = 5,
+    ["minecolonies:onion"] = 5,  -- if they override vanilla
+    ["minecolonies:tomato"] = 5,
+    ["minecolonies:peanut"] = 5,
+	["minecolonies:nether_pepper"] = 5,
+	["minecolonies:peas"] = 5,
+	["minecolonies:mint"] = 8,
+    ["minecolonies:corn"] = 5,
+
+	-- Common ores
+	["minecraft:coal"] = 10,
+	["minecraft:redstone"] = 10,
+	["minecraft:lapis_lazuli"] = 10,
+	["minecraft:iron_ingot"] = 25,
+	["minecraft:copper_ingot"] = 10,
+
+	-- Valuable ores
+	["minecraft:gold_ingot"] = 30,
+	["minecraft:diamond"] = 60,
+	["minecraft:netherite_ingot"] = 400
 }
 
 local data_file = "players.db"

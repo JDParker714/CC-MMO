@@ -99,7 +99,7 @@ local function waitForOwnerCard()
         markup_percent = 0
     end
 
-    local markup = 1 + (markup_percent / 100)
+    local markup = math.max(1 + (markup_percent / 100), 0.1)
     disk_drive.ejectDisk()
     sleep(1)
     return id, markup
