@@ -116,12 +116,12 @@ local function overlay_players(rows, me_id, center_x, center_y)
 			local sy = (op.y - y0) + 1
 			if sx >= 1 and sx <= VIEW_W and sy >= 1 and sy <= VIEW_H then
 				-- render other players as '&' in bright cyan on black (tweak as you like)
-				stamp(rows, sx, sy, "&", "b", "0")
+				stamp(rows, sx, sy, "&", "f", "e")
 			end
 		end
 	end
 	-- draw ME last at center so I’s on top
-	stamp(rows, HALF_W+1, HALF_H+1, "@", "f", "0")
+	stamp(rows, HALF_W+1, HALF_H+1, "@", "f", "b")
 end
 
 local function make_view_packet(id, p)
