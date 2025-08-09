@@ -81,8 +81,18 @@ end
 
 local function spawn_if_needed(id)
 	if not players[id] then
-		local sx, sy = find_free_spawn(50, 50)	-- center-ish for 100x100
-		players[id] = { x = sx, y = sy, last_seen = os.clock() }
+		local sx, sy = find_free_spawn(50, 50)
+		players[id] = {
+			x = sx, y = sy,
+			last_seen = now(),
+			-- Input
+			input_dir = nil,
+			move_cd = 0,
+			-- Player Stats
+			lv = 10,
+			hp = 100, hp_max = 100,
+			mp = 50,  mp_max = 50
+		}
 	end
 end
 
@@ -136,8 +146,13 @@ local function make_view_packet(id, p)
 	overlay_players(rows, id, p.x, p.y)
 	return {
 		type = "state",
-		player = { x = p.x, y = p.y },
-		rows   = rows,
+		player = {
+			x = p.x, y = p.y,
+			lv = p.lv,
+			hp = p.hp, hp_max = p.hp_max,
+			mp = p.mp, mp_max = p.mp_max
+		},
+		rows = rows,
 		view_w = VIEW_W, view_h = VIEW_H
 	}
 end
@@ -162,7 +177,15 @@ while true do
 				local rows = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
 				overlay_players(rows, id, p.x, p.y)
 				rednet.send(sender, textutils.serialize({
-					type="handshake_ack", player={x=p.x,y=p.y}, rows=rows, view_w=VIEW_W, view_h=VIEW_H
+					type = "handshake_ack",
+					player = {
+						x = p.x, y = p.y,
+						lv = p.lv,
+						hp = p.hp, hp_max = p.hp_max,
+						mp = p.mp, mp_max = p.mp_max
+					},
+					rows = rows,
+					view_w = VIEW_W, view_h = VIEW_H
 				}), PROTO_MMO)
 
 			elseif t == "input_state" and msg.player_id then
@@ -185,6 +208,10 @@ while true do
 	elseif ev == "timer" and p1 == tick_timer then
 		-- process one fixed tick
 		for id, p in pairs(players) do
+			-- player stats - example regen
+			p.hp = math.min(p.hp_max, p.hp + 0)	-- set to >0 if you want regen
+			p.mp = math.min(p.mp_max, p.mp + 0)	-- set to >0 if you want regen
+
 			-- cooldown
 			if p.move_cd and p.move_cd > 0 then
 				p.move_cd = p.move_cd - 1

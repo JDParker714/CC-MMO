@@ -72,6 +72,16 @@ local item_prices = {
 	["fruitsdelight:lemon"] = 1,
 	["fruitsdelight:pineapple"] = 2,
 
+	["fruitsdelight:pear_jello"] = 10,
+	["fruitsdelight:lychee_jello"] = 10,
+	["fruitsdelight:mango_jello"] = 12,
+	["fruitsdelight:persimmon_jello"] = 10,
+	["fruitsdelight:peach_jello"] = 12,
+	["fruitsdelight:orange_jello"] = 10,
+	["fruitsdelight:kiwi_jello"] = 10,
+	["fruitsdelight:lemon_jello"] = 10,
+	["fruitsdelight:pineapple_jello"] = 12,
+
 	-- Common ores
 	["minecraft:coal"] = 10,
 	["minecraft:redstone"] = 10,
