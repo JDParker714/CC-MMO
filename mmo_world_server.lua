@@ -4,9 +4,11 @@
 local modem = peripheral.find("modem", rednet.open)
 
 local world = require("mmo_world_atlas")
+local entities = require("mmo_entities")
+local mobs = {}	-- array of entities
 
 -- Tunables
-local VIEW_W, VIEW_H = 51, 19 -- adv computer fits nicely; tweak per UI
+local VIEW_W, VIEW_H = 51, 17 -- adv computer fits nicely; tweak per UI
 local HEARTBEAT_TTL = 12 -- seconds; if no heartbeat, drop player
 local CLEANUP_PERIOD = 5 -- how often we scan for dead sessions
 local HALF_W, HALF_H = math.floor(VIEW_W/2), math.floor(VIEW_H/2)
@@ -27,9 +29,31 @@ local players = {}
 local function now() return os.clock() end
 
 
-local function rect_contains(x, y, x1, y1, x2, y2)
-	return x >= x1 and x <= x2 and y >= y1 and y <= y2
+local function is_pos_free(wx, wy)
+	if world.is_blocked(wx, wy) then return false end
+	for _, p in pairs(players) do if p.x==wx and p.y==wy then return false end end
+	for _, e in ipairs(mobs)   do if e.x==wx and e.y==wy then return false end end
+	return true
 end
+
+local function spawn_n_mobs_random(kind, n)
+	for i=1,n do
+		local tries = 300
+		repeat
+			local wx = math.random(2, 98)
+			local wy = math.random(2, 98)
+			if is_pos_free(wx, wy) then
+				table.insert(mobs, entities.new(kind, wx, wy))
+				break
+			end
+			tries = tries - 1
+		until tries <= 0
+	end
+end
+
+spawn_n_mobs_random("goblin", 8)
+spawn_n_mobs_random("raider", 4)
+spawn_n_mobs_random("dragon", 2)
 
 local function is_occupied(wx, wy, except_id)
 	for id, p in pairs(players) do
@@ -132,7 +156,6 @@ local function overlay_players(rows, me_id, center_x, center_y)
 			local sx = (op.x - x0) + 1
 			local sy = (op.y - y0) + 1
 			if sx >= 1 and sx <= VIEW_W and sy >= 1 and sy <= VIEW_H then
-				-- render other players as '&' in bright cyan on black (tweak as you like)
 				stamp(rows, sx, sy, "&", "f", "e")
 			end
 		end
@@ -141,9 +164,23 @@ local function overlay_players(rows, me_id, center_x, center_y)
 	stamp(rows, HALF_W+1, HALF_H+1, "@", "f", "b")
 end
 
+local function overlay_entities(rows, center_x, center_y)
+	local x0 = center_x - HALF_W
+	local y0 = center_y - HALF_H
+	for _, e in ipairs(mobs) do
+		local sx = (e.x - x0) + 1
+		local sy = (e.y - y0) + 1
+		if sx>=1 and sx<=VIEW_W and sy>=1 and sy<=VIEW_H then
+			local ch = e.glyph or "E"
+			stamp(rows, sx, sy, ch, e.fg or "f", e.bg or "e")
+		end
+	end
+end
+
 local function make_view_packet(id, p)
 	local rows = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
 	overlay_players(rows, id, p.x, p.y)
+	overlay_entities(rows, p.x, p.y)
 	return {
 		type = "state",
 		player = {
@@ -228,6 +265,10 @@ while true do
 					p.move_cd = MOVE_COOLDOWN_TICKS
 				end
 			end
+		end
+
+		for _, e in ipairs(mobs) do
+			e:step(players, mobs)
 		end
 		-- push frames to connected clients
 		for id, cid in pairs(sessions) do
