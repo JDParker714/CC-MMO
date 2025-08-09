@@ -21,7 +21,7 @@ end
 
 local function build_chunk(cx, cy)
 	local rows = {}
-	local grass_fg, grass_bg = "2","d"
+	local grass_fg, grass_bg = "5","d"
 	local road_fg,  road_bg  = "4","8"
 	local wall_fg,  wall_bg  = "f","7"
 
