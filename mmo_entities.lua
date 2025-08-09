@@ -15,6 +15,8 @@ function Base:new(o)
 	-- required gameplay fields
 	o.x = assert(o.x, "Entity needs x")
 	o.y = assert(o.y, "Entity needs y")
+    o.last_dx = 0
+    o.last_dy = 0
 	o.glyph = o.glyph or "E"			-- character to draw
 	o.fg = o.fg or "f"					-- blit fg
 	o.bg = o.bg or "e"					-- blit bg
@@ -48,6 +50,8 @@ function Base:step(players, entities)
 	end
 	local dx, dy = self:think(players, entities)
 	if dx ~= 0 or dy ~= 0 then
+        self.last_dx = dx
+        self.last_dy = dy
 		local nx, ny = self.x + dx, self.y + dy
 		if self:can_move(nx, ny, players, entities) then
 			self.x, self.y = nx, ny

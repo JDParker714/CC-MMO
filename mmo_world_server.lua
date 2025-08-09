@@ -63,7 +63,7 @@ local function is_occupied(wx, wy, except_id)
 	end
 	for _, e in ipairs(mobs) do 
 		if e.x==wx and e.y==wy then 
-			return false 	
+			return true 	
 		end 
 	end
 	return false
@@ -113,6 +113,7 @@ local function spawn_if_needed(id)
 		local sx, sy = find_free_spawn(50, 50)
 		players[id] = {
 			x = sx, y = sy,
+			last_dx = 0, last_dy = 0,
 			last_seen = now(),
 			-- Input
 			input_dir = nil,
@@ -267,6 +268,8 @@ while true do
 				elseif p.input_dir == "d" then dx = 1 end
 				if dx ~= 0 or dy ~= 0 then
 					try_move(id, dx, dy)	-- already checks map + player collision
+					p.last_dx = dx
+       				p.last_dy = dy
 					p.move_cd = MOVE_COOLDOWN_TICKS
 				end
 			end
