@@ -40,8 +40,8 @@ local function spawn_n_mobs_random(kind, n)
 	for i=1,n do
 		local tries = 300
 		repeat
-			local wx = math.random(2, 98)
-			local wy = math.random(2, 98)
+			local wx = math.random(25, 75)
+			local wy = math.random(25, 75)
 			if is_pos_free(wx, wy) then
 				table.insert(mobs, entities.new(kind, wx, wy))
 				break
@@ -60,6 +60,11 @@ local function is_occupied(wx, wy, except_id)
 		if id ~= except_id and p.x == wx and p.y == wy then
 			return true
 		end
+	end
+	for _, e in ipairs(mobs) do 
+		if e.x==wx and e.y==wy then 
+			return false 	
+		end 
 	end
 	return false
 end

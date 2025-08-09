@@ -85,7 +85,7 @@ end
 -- ===== Built-in Examples ==================================================
 -- Goblin: random wander, a bit faster
 M.register("goblin", {
-	glyph = "G", fg = "0", bg = "d", cd_max = 1,
+	glyph = "G", fg = "f", bg = "5", cd_max = 1,
 	think = function(self, players, entities)
 		local r = math.random(4)
 		if r == 1 then return 0,-1
@@ -97,7 +97,7 @@ M.register("goblin", {
 
 -- Raider: prefers horizontal wandering
 M.register("raider", {
-	glyph = "^", fg = "0", bg = "c", cd_max = 2,
+	glyph = "^", fg = "f", bg = "c", cd_max = 2,
 	think = function(self, players, entities)
 		local r = math.random(6)
 		if r <= 2 then return 0, (r==1) and -1 or 1
@@ -116,12 +116,12 @@ M.register("dragon", {
 		local best_id, best_d, best_dx, best_dy = nil, math.huge, 0, 0
 		for id, p in pairs(players) do
 			local dx, dy = p.x - self.x, p.y - self.y
-			local d = math.abs(dx) + math.abs(dy)
+			local d = math.sqrt(dx * dx + dy * dy)
 			if d < best_d then
 				best_d = d; best_id = id; best_dx = dx; best_dy = dy
 			end
 		end
-		if best_id and best_d <= 12 then
+		if best_id and best_d <= 15 then
 			if math.abs(best_dx) > math.abs(best_dy) then
 				if best_dx < 0 then return -1, 0 else return 1, 0 end
 			else
