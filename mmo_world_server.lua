@@ -2,7 +2,6 @@
 -- Server-authoritative movement + view streaming + heartbeat-based player cleanup.
 
 local modem = peripheral.find("modem", rednet.open)
-if not modem then error("No modem found") end
 
 local world = require("mmo_world_atlas")
 

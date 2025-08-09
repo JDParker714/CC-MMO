@@ -4,7 +4,6 @@
 -- Advanced Computer required.
 
 local modem = peripheral.find("modem", rednet.open)
-if not modem then error("No modem found") end
 
 local drive = peripheral.find("drive")
 if not drive then error("No disk drive found") end

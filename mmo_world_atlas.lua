@@ -40,7 +40,7 @@ local function load_chunk(cx, cy)
 	return cache[cy][cx]
 end
 
-function is_blocked(wx, wy)
+function M.is_blocked(wx, wy)
 	local cx, cy, lx, ly = w2c(wx, wy)
 	local ch = load_chunk(cx, cy)
 	if not ch or not ch.rows[ly] then return true end	-- void = blocked
