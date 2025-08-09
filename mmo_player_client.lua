@@ -73,66 +73,6 @@ local function blit_rows(rows, ox, oy)
 	end
 end
 
--- ========== UI Functions ==========
-local function fit_text(s, maxw)
-	if #s <= maxw then return s end
-	if maxw <= 1 then return s:sub(1, maxw) end
-	return s:sub(1, maxw-1) .. "…"
-end
-
-local function draw_hud_bottom()
-	local w, h = term.getSize()
-	local y1, y2 = h-1, h
-	term.setBackgroundColor(colors.black)
-
-	-- Line 1: name + level (white on black)
-	local lvStr = ("  Lv %d"):format(stats.lv or 1)
-	local lvW   = #lvStr
-	
-	local nameMax = w - lvW
-	local nameTxt = fit_text(player_name, nameMax)
-	
-	if nameMax > 0 and #nameTxt > 0 then
-		term.setCursorPos(1, y1)
-		term.blit(nameTxt, string.rep("0", #nameTxt), string.rep("f", #nameTxt))
-		-- pad leftover gap (if any) up to the start of the Lv block
-		if #nameTxt < nameMax then
-			local gap = nameMax - #nameTxt
-			term.blit(string.rep(" ", gap), string.rep("0", gap), string.rep("f", gap))
-		end
-	else
-		-- clear line if name area is zero
-		term.setCursorPos(1, y1)
-		term.blit(string.rep(" ", nameMax), string.rep("0", nameMax), string.rep("f", nameMax))
-	end
-
-	-- draw Lv block right-aligned
-	local lvX = w - lvW + 1
-	term.setCursorPos(lvX, y1)
-	term.blit(lvStr, string.rep("0", lvW), string.rep("f", lvW))
-
-	-- ===== Line 2: HP red, spacer white, MP blue =====
-	local hpTxt = ("Hp %d/%d"):format(stats.hp or 0, stats.hp_max or 0)
-	local mpTxt = ("Mp %d/%d"):format(stats.mp or 0, stats.mp_max or 0)
-	local spacer = "  "
-
-	local c2 = hpTxt .. spacer .. mpTxt
-	if #c2 > w then c2 = fit_text(c2, w) end
-
-	local hpLen = math.min(#hpTxt, #c2)
-	local spLen = math.max(0, math.min(#spacer, #c2 - hpLen))
-	local mpLen = math.max(0, #c2 - hpLen - spLen)
-
-	local fg2 = string.rep("e", hpLen) .. string.rep("0", spLen) .. string.rep("b", mpLen) -- red/white/blue
-	local bg2 = string.rep("f", #c2)                                                        -- black
-
-	term.setCursorPos(1, y2)
-	term.blit(c2, fg2, bg2)
-	if #c2 < w then
-		term.blit(string.rep(" ", w-#c2), string.rep("0", w-#c2), string.rep("f", w-#c2))
-	end
-end
-
 -- ========== World Server handshake ==========
 local function ws_handshake(player_id)
 	rednet.send(WORLD_ID, textutils.serialize({ type="handshake", player_id=player_id }), PROTO_MMO)
@@ -158,11 +98,72 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	stats.mp     = handshake.player.mp
 	stats.mp_max = handshake.player.mp_max
 
+	-- ========== UI Functions ==========
+	local function fit_text(s, maxw)
+		if #s <= maxw then return s end
+		if maxw <= 1 then return s:sub(1, maxw) end
+		return s:sub(1, maxw-1) .. "…"
+	end
+
+	local function draw_hud_bottom()
+		local w, h = term.getSize()
+		local y1, y2 = h-1, h
+		term.setBackgroundColor(colors.black)
+
+		-- Line 1: name + level (white on black)
+		local lvStr = ("  Lv %d"):format(stats.lv or 1)
+		local lvW   = #lvStr
+		
+		local nameMax = w - lvW
+		local nameTxt = fit_text(player_name, nameMax)
+		
+		if nameMax > 0 and #nameTxt > 0 then
+			term.setCursorPos(1, y1)
+			term.blit(nameTxt, string.rep("0", #nameTxt), string.rep("f", #nameTxt))
+			-- pad leftover gap (if any) up to the start of the Lv block
+			if #nameTxt < nameMax then
+				local gap = nameMax - #nameTxt
+				term.blit(string.rep(" ", gap), string.rep("0", gap), string.rep("f", gap))
+			end
+		else
+			-- clear line if name area is zero
+			term.setCursorPos(1, y1)
+			term.blit(string.rep(" ", nameMax), string.rep("0", nameMax), string.rep("f", nameMax))
+		end
+
+		-- draw Lv block right-aligned
+		local lvX = w - lvW + 1
+		term.setCursorPos(lvX, y1)
+		term.blit(lvStr, string.rep("0", lvW), string.rep("f", lvW))
+
+		-- ===== Line 2: HP red, spacer white, MP blue =====
+		local hpTxt = ("Hp %d/%d"):format(stats.hp or 0, stats.hp_max or 0)
+		local mpTxt = ("Mp %d/%d"):format(stats.mp or 0, stats.mp_max or 0)
+		local spacer = "  "
+
+		local c2 = hpTxt .. spacer .. mpTxt
+		if #c2 > w then c2 = fit_text(c2, w) end
+
+		local hpLen = math.min(#hpTxt, #c2)
+		local spLen = math.max(0, math.min(#spacer, #c2 - hpLen))
+		local mpLen = math.max(0, #c2 - hpLen - spLen)
+
+		local fg2 = string.rep("e", hpLen) .. string.rep("0", spLen) .. string.rep("b", mpLen) -- red/white/blue
+		local bg2 = string.rep("f", #c2)                                                        -- black
+
+		term.setCursorPos(1, y2)
+		term.blit(c2, fg2, bg2)
+		if #c2 < w then
+			term.blit(string.rep(" ", w-#c2), string.rep("0", w-#c2), string.rep("f", w-#c2))
+		end
+	end
+
 	term.setBackgroundColor(colors.black)
 	term.setCursorBlink(false)
 	term.clear()
 
 	blit_rows(handshake.rows, ox, oy)
+	draw_hud_bottom()
 
 	local cur_dir = nil
 	local function send_dir(dir)
@@ -217,8 +218,8 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 
 					term.setBackgroundColor(colors.black); term.clear()
 
-					blit_rows(handshake.rows, ox, oy)
-					draw_hud_bottom(player_name, stats)
+					blit_rows(st.rows, ox, oy)       -- draw the new frame
+					draw_hud_bottom()    
 				end
 			end
 		end
