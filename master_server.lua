@@ -88,6 +88,9 @@ local item_prices = {
 local data_file = "players.db"
 local modem = peripheral.find("modem", rednet.open)
 
+local PROTO_MS = "master"
+rednet.host(PROTO_MS, "master")
+
 -- Load player database
 local player_db = {}
 if fs.exists(data_file) then
@@ -106,12 +109,12 @@ end
 print("Player registration server running...")
 
 while true do
-	local sender, msg = rednet.receive()
+	local sender, msg = rednet.receive(PROTO_MS)
 	local data = textutils.unserialize(msg)
 
 	if data and data.type == "create_player" then
 		if player_db[data.id] then
-			rednet.send(sender, textutils.serialize({ status = "duplicate" }))
+			rednet.send(sender, textutils.serialize({ status = "duplicate" }), PROTO_MS)
 		else
 			player_db[data.id] = {
 				name = data.name,
@@ -119,31 +122,31 @@ while true do
 				balance = 100
 			}
 			save_db()
-			rednet.send(sender, textutils.serialize({ status = "success" }))
+			rednet.send(sender, textutils.serialize({ status = "success" }), PROTO_MS)
 			print("New player created: " .. data.name .. " (" .. data.id .. ")")
 		end
 	elseif data and data.type == "lookup_player" and player_db[data.id] then
 		rednet.send(sender, textutils.serialize({
 			status = "found",
 			data = player_db[data.id]
-		}))
+		}), PROTO_MS)
 	elseif data and data.type == "add_balance" and player_db[data.id] then
 		player_db[data.id].balance = player_db[data.id].balance + data.amount
 		save_db()
-		rednet.send(sender, textutils.serialize({ status = "balance_updated" }))
+		rednet.send(sender, textutils.serialize({ status = "balance_updated" }), PROTO_MS)
 		print("Updated balance for " .. player_db[data.id].name .. ": +" .. data.amount)
 	elseif data and data.type == "verify_admin" then
 		if data.password == ADMIN_PASSWORD then
-			rednet.send(sender, textutils.serialize({ status = "authorized" }))
+			rednet.send(sender, textutils.serialize({ status = "authorized" }), PROTO_MS)
 		else
-			rednet.send(sender, textutils.serialize({ status = "unauthorized" }))
+			rednet.send(sender, textutils.serialize({ status = "unauthorized" }), PROTO_MS)
 		end
 	elseif data and data.type == "get_price_table" then
 		rednet.send(sender, textutils.serialize({
 			status = "ok",
 			prices = item_prices
-		}))
+		}), PROTO_MS)
 	else
-		rednet.send(sender, textutils.serialize({ status = "not_found" }))
+		rednet.send(sender, textutils.serialize({ status = "not_found" }), PROTO_MS)
 	end
 end

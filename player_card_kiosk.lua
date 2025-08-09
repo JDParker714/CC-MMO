@@ -9,6 +9,10 @@ if not disk_drive then
 	return
 end
 
+local PROTO_MS = "master"
+local MASTER_ID = rednet.lookup(PROTO_MS, "master")
+if not MASTER_ID then error("Master server not found") end
+
 local function createPlayerCard()
 	if not fs.exists("disk") then
 		print("Please insert a floppy disk...")
@@ -33,14 +37,14 @@ local function createPlayerCard()
 		password = admin_password
 	}
 
-	rednet.broadcast(textutils.serialize(verify_request))
-	local _, response_raw = rednet.receive(3)
-	if not response_raw then
+	rednet.send(MASTER_ID, textutils.serialize(verify_request), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
+	if not raw then
 		print("Server did not respond.")
 		return
 	end
 
-	local response = textutils.unserialize(response_raw)
+	local response = textutils.unserialize(raw)
 	if response.status ~= "authorized" then
 		print("Incorrect admin password.")
 		disk_drive.ejectDisk()
@@ -68,14 +72,14 @@ local function createPlayerCard()
 			password = password
 		}
 
-		rednet.broadcast(textutils.serialize(request))
-		local _, response_raw = rednet.receive(3)
-		if not response_raw then
+		rednet.send(MASTER_ID, textutils.serialize(request), PROTO_MS)
+		local _, raw = rednet.receive(PROTO_MS, 3)
+		if not raw then
 			print("Server did not respond.")
 			return
 		end
 
-		local response = textutils.unserialize(response_raw)
+		local response = textutils.unserialize(raw)
 		if response.status == "success" then
 			success = true
 			break
@@ -121,8 +125,8 @@ local function readPlayerCard()
 		id = id
 	}
 
-	rednet.broadcast(textutils.serialize(request))
-	local _, raw = rednet.receive(3)
+	rednet.send(MASTER_ID, textutils.serialize(request), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
 	if not raw then
 		print("No response from server.")
 		return

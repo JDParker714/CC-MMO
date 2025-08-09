@@ -8,11 +8,20 @@ local modem = peripheral.find("modem", rednet.open)
 local drive = peripheral.find("drive")
 if not drive then error("No disk drive found") end
 
+local PROTO_MMO = "mmo"
+local PROTO_MS  = "master"
+
+local MASTER_ID = rednet.lookup(PROTO_MS,  "master")
+if not MASTER_ID then error("Master server not found") end
+
+local WORLD_ID  = rednet.lookup(PROTO_MMO, "world")
+if not WORLD_ID then error("MMO world server not found") end
+
 -- ========== Master Server helpers (matches your master_server.lua) ==========
 local function ms_lookup_player(id)
 	local req = { type = "lookup_player", id = id }
-	rednet.broadcast(textutils.serialize(req))
-	local _, raw = rednet.receive(3)
+	rednet.send(MASTER_ID, textutils.serialize(req), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
 	if not raw then return nil end
 	local resp = textutils.unserialize(raw)
 	if resp and resp.status == "found" then return resp.data end
@@ -66,8 +75,8 @@ end
 
 -- ========== World Server handshake ==========
 local function ws_handshake(player_id)
-	rednet.broadcast(textutils.serialize({ type="handshake", player_id=player_id }))
-	local _, raw = rednet.receive(3)
+	rednet.send(WORLD_ID, textutils.serialize({ type="handshake", player_id=player_id }), PROTO_MMO)
+	local _, raw = rednet.receive(PROTO_MMO, 3)
 	if not raw then return nil, "No world server response" end
 	local resp = textutils.unserialize(raw)
 	if not resp or resp.type ~= "handshake_ack" then return nil, "Bad world handshake" end
@@ -77,7 +86,7 @@ end
 -- ========== Heartbeat ==========
 local function heartbeat_loop(player_id)
 	while true do
-		rednet.broadcast(textutils.serialize({ type="heartbeat", player_id=player_id }))
+		rednet.send(WORLD_ID, textutils.serialize({ type="heartbeat", player_id=player_id }), PROTO_MMO)
 		sleep(3)
 	end
 end
@@ -102,8 +111,8 @@ local function gameplay_loop(player_id, handshake)
 			if ev == "key" then
 				local k = keys.getName(p1)
 				if k == "w" or k == "a" or k == "s" or k == "d" then
-					rednet.broadcast(textutils.serialize({ type="input", player_id=player_id, key=k }))
-					local _, raw = rednet.receive(2)
+					rednet.send(WORLD_ID, textutils.serialize({ type="input", player_id=player_id, key=k }), PROTO_MMO)
+					local _, raw = rednet.receive(PROTO_MMO, 2)
 					if raw then
 						local st = textutils.unserialize(raw)
 						if st and st.type == "state" then
@@ -128,7 +137,7 @@ local function gameplay_loop(player_id, handshake)
 	parallel.waitForAny(inputs, heartbeat)
 
 	-- Try to logout cleanly
-	rednet.broadcast(textutils.serialize({ type="logout", player_id=player_id }))
+	rednet.send(WORLD_ID, textutils.serialize({ type="logout", player_id=player_id }), PROTO_MMO)
 end
 
 -- ========== Main ==========

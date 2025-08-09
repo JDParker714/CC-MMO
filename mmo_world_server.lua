@@ -11,6 +11,9 @@ local HEARTBEAT_TTL = 12 -- seconds; if no heartbeat, drop player
 local CLEANUP_PERIOD = 5 -- how often we scan for dead sessions
 local HALF_W, HALF_H = math.floor(VIEW_W/2), math.floor(VIEW_H/2)
 
+local PROTO_MMO = "mmo"
+rednet.host(PROTO_MMO, "mmo")
+
 -- Players: [player_id] = { x=.., y=.., last_seen=os.clock() }
 local players = {}
 
@@ -19,6 +22,15 @@ local function now() return os.clock() end
 
 local function rect_contains(x, y, x1, y1, x2, y2)
 	return x >= x1 and x <= x2 and y >= y1 and y <= y2
+end
+
+local function is_occupied(wx, wy, except_id)
+	for id, p in pairs(players) do
+		if id ~= except_id and p.x == wx and p.y == wy then
+			return true
+		end
+	end
+	return false
 end
 
 local function find_free_spawn(pref_x, pref_y, max_radius)
@@ -82,14 +94,6 @@ local function try_move(id, dx, dy)
 	return true
 end
 
-local function try_move(p, dx, dy)
-	local nx, ny = p.x + dx, p.y + dy
-	if not world.is_blocked(nx, ny) then
-		p.x, p.y = nx, ny
-	end
-end
-
-
 -- Stamp a single glyph onto a term.blit row triplet at (sx, sy)
 local function stamp(rows, sx, sy, ch, fg, bg)
 	if sy < 1 or sy > #rows then return end
@@ -136,7 +140,7 @@ local next_cleanup = now() + CLEANUP_PERIOD
 print("[WORLD] Server online.")
 
 while true do
-	local sender, raw, _ = rednet.receive(0.25) -- short poll so we can do cleanup
+	local sender, raw, _ = rednet.receive(PROTO_MMO, 0.25) -- short poll so we can do cleanup
 	if sender and raw then
 		local ok, msg = pcall(textutils.unserialize, raw)
 		if ok and type(msg) == "table" then
@@ -154,7 +158,7 @@ while true do
 							return r
 						end)(),
 					view_w = VIEW_W, view_h = VIEW_H
-				}))
+				}), PROTO_MMO)
 
 			elseif t == "input" and msg.player_id and msg.key then
 				local id = msg.player_id
@@ -165,16 +169,16 @@ while true do
 				elseif msg.key == "a" then try_move(id,-1, 0)
 				elseif msg.key == "d" then try_move(id, 1, 0)
 				end
-				rednet.send(sender, textutils.serialize(make_view_packet(id, p)))
+				rednet.send(sender, textutils.serialize(make_view_packet(id, p)), PROTO_MMO)
 
 			elseif t == "heartbeat" and msg.player_id then
 				touch(msg.player_id)
 				-- Optionally ack (not required).
-				-- rednet.send(sender, textutils.serialize({ type="hb_ack" }))
+				-- rednet.send(sender, textutils.serialize({ type="hb_ack" }), PROTO_MMO)
 
 			elseif t == "logout" and msg.player_id then
 				players[msg.player_id] = nil
-				rednet.send(sender, textutils.serialize({ type = "bye" }))
+				rednet.send(sender, textutils.serialize({ type = "bye" }), PROTO_MMO)
 			end
 		end
 	end

@@ -11,10 +11,14 @@ if not disk_drive or not stock_chest or not player_chest then
 	return
 end
 
+local PROTO_MS = "master"
+local MASTER_ID = rednet.lookup(PROTO_MS, "master")
+if not MASTER_ID then error("Master server not found") end
+
 local function fetchPriceTable()
 	local req = { type = "get_price_table" }
-	rednet.broadcast(textutils.serialize(req))
-	local _, raw = rednet.receive(3)
+	rednet.send(MASTER_ID, textutils.serialize(req), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
 	if not raw then
 		print("Failed to fetch price table from server.")
 		return {}
@@ -39,8 +43,8 @@ end
 
 local function lookupPlayer(id)
 	local req = { type = "lookup_player", id = id }
-	rednet.broadcast(textutils.serialize(req))
-	local _, raw = rednet.receive(3)
+	rednet.send(MASTER_ID, textutils.serialize(req), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
 	if raw then
 		local resp = textutils.unserialize(raw)
 		if resp.status == "found" then
@@ -52,7 +56,7 @@ end
 
 local function updateBalance(id, amount)
 	local req = { type = "add_balance", id = id, amount = amount }
-	rednet.broadcast(textutils.serialize(req))
+	rednet.send(MASTER_ID, textutils.serialize(req), PROTO_MS)
 end
 
 local function waitForPlayerDisk()

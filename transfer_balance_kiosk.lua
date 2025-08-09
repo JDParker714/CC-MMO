@@ -2,6 +2,10 @@ local modem = peripheral.find("modem", rednet.open)
 local drive_left = peripheral.wrap("left")
 local drive_right = peripheral.wrap("right")
 
+local PROTO_MS = "master"
+local MASTER_ID = rednet.lookup(PROTO_MS, "master")
+if not MASTER_ID then error("Master server not found") end
+
 -- Utility
 local function getPlayerIdFromDrive(drive)
 	if not drive.isDiskPresent() then return nil end
@@ -16,8 +20,8 @@ local function getPlayerIdFromDrive(drive)
 end
 
 local function getPlayerData(id)
-	rednet.broadcast(textutils.serialize({ type = "lookup_player", id = id }))
-	local _, raw = rednet.receive(3)
+	rednet.send(MASTER_ID, textutils.serialize({ type = "lookup_player", id = id }), PROTO_MS)
+	local _, raw = rednet.receive(PROTO_MS, 3)
 	if not raw then return nil end
 	local resp = textutils.unserialize(raw)
 	if resp and resp.status == "found" then
@@ -27,11 +31,11 @@ local function getPlayerData(id)
 end
 
 local function updateBalance(id, amount)
-	rednet.broadcast(textutils.serialize({
+	rednet.send(MASTER_ID, textutils.serialize({
 		type = "add_balance",
 		id = id,
 		amount = amount
-	}))
+	}), PROTO_MS)
 end
 
 -- Wait for both cards
