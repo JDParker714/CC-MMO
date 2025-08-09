@@ -14,7 +14,7 @@ local PROTO_MS  = "master"
 local MASTER_ID = rednet.lookup(PROTO_MS,  "master")
 if not MASTER_ID then error("Master server not found") end
 
-local WORLD_ID  = rednet.lookup(PROTO_MMO, "world")
+local WORLD_ID  = rednet.lookup(PROTO_MMO, "mmo")
 if not WORLD_ID then error("MMO world server not found") end
 
 -- ========== Master Server helpers (matches your master_server.lua) ==========
@@ -134,13 +134,27 @@ local function gameplay_loop(player_id, handshake)
 		heartbeat_loop(player_id)
 	end
 
-	parallel.waitForAny(inputs, heartbeat)
+	local function updates()
+		while running do
+			local _, raw = rednet.receive(PROTO_MMO, 1)
+			if raw then
+				local st = textutils.unserialize(raw)
+				if st and st.type == "state" then
+					term.setBackgroundColor(colors.black); term.clear()
+					blit_rows(st.rows, ox, oy)
+				end
+			end
+		end
+	end
+
+	parallel.waitForAny(inputs, heartbeat, updates)
 
 	-- Try to logout cleanly
 	rednet.send(WORLD_ID, textutils.serialize({ type="logout", player_id=player_id }), PROTO_MMO)
 end
 
 -- ========== Main ==========
+
 while true do
 	local auth = authenticate()
 	if auth then

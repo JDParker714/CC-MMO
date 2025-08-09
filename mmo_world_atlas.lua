@@ -82,7 +82,7 @@ function M.get_view(wx, wy, vw, vh)
 				-- Void tile fallback
 				c_line[#c_line+1]	= " "
 				fg_line[#fg_line+1]= "7"
-				bg_line[#bg_line+1]= "0"
+				bg_line[#bg_line+1]= "f"
 			end
 		end
 

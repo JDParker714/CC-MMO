@@ -173,9 +173,11 @@ while true do
 
 			elseif t == "heartbeat" and msg.player_id then
 				touch(msg.player_id)
-				-- Optionally ack (not required).
-				-- rednet.send(sender, textutils.serialize({ type="hb_ack" }), PROTO_MMO)
-
+				local id = msg.player_id
+				local p = players[id]
+				if p then
+					rednet.send(sender, textutils.serialize(make_view_packet(id, p)), PROTO_MMO)
+				end
 			elseif t == "logout" and msg.player_id then
 				players[msg.player_id] = nil
 				rednet.send(sender, textutils.serialize({ type = "bye" }), PROTO_MMO)

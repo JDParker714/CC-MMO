@@ -21,9 +21,9 @@ end
 
 local function build_chunk(cx, cy)
 	local rows = {}
-	local grass_fg, grass_bg = "2","0"
-	local road_fg,  road_bg  = "e","8"
-	local wall_fg,  wall_bg  = "7","0"
+	local grass_fg, grass_bg = "2","d"
+	local road_fg,  road_bg  = "4","8"
+	local wall_fg,  wall_bg  = "f","7"
 
 	-- World coordinate of chunk's top-left
 	local wx0, wy0 = cx * CHUNK_W, cy * CHUNK_H
@@ -49,7 +49,7 @@ local function build_chunk(cx, cy)
 
 			-- Vertical road
 			if wx == road_x then
-				rows[y].c  = rows[y].c:sub(1, x-1) .. "-" .. rows[y].c:sub(x+1)
+				rows[y].c  = rows[y].c:sub(1, x-1) .. "|" .. rows[y].c:sub(x+1)
 				rows[y].fg = rows[y].fg:sub(1, x-1) .. road_fg .. rows[y].fg:sub(x+1)
 				rows[y].bg = rows[y].bg:sub(1, x-1) .. road_bg .. rows[y].bg:sub(x+1)
 			end
