@@ -40,15 +40,6 @@ local function load_chunk(cx, cy)
 	return cache[cy][cx]
 end
 
-function M.is_blocked(wx, wy)
-	local cx, cy, lx, ly = w2c(wx, wy)
-	local ch = load_chunk(cx, cy)
-	if not ch or not ch.rows[ly] then return true end	-- void = blocked
-	local r = ch.rows[ly]
-	local tile = r.c:sub(lx, lx)
-	return tile == "#"
-end
-
 local function floorDiv(a, b) return (a - (a % b)) / b end
 local function w2c(wx, wy)
 	local cw, ch = M.CHUNK_W, M.CHUNK_H
@@ -57,6 +48,15 @@ local function w2c(wx, wy)
 	local lx = (wx % cw) + 1
 	local ly = (wy % ch) + 1
 	return cx, cy, lx, ly
+end
+
+function M.is_blocked(wx, wy)
+	local cx, cy, lx, ly = w2c(wx, wy)
+	local ch = load_chunk(cx, cy)
+	if not ch or not ch.rows[ly] then return true end	-- void = blocked
+	local r = ch.rows[ly]
+	local tile = r.c:sub(lx, lx)
+	return tile == "#"
 end
 
 -- Return a viewport centered on (wx,wy) with size (vw,vh) as rows of {c,fg,bg}
