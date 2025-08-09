@@ -110,52 +110,35 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 		local y1, y2 = h-1, h
 		term.setBackgroundColor(colors.black)
 
-		-- Line 1: name + level (white on black)
+		-- Line 1: name + level + hp + mp
 		local lvStr = ("  Lv %d"):format(stats.lv or 1)
-		local lvW   = #lvStr
+		local hpStr = ("Hp %d/%d"):format(stats.hp or 0, stats.hp_max or 0)
+		local mpStr = ("Mp %d/%d"):format(stats.mp or 0, stats.mp_max or 0)
+		local spacerStr = "  "
+
+		local totalW = #spacerStr + #lvStr + #spacerStr + #hpStr + #spacerStr + #mpStr
 		
-		local nameMax = w - lvW
+		local nameMax = w - totalW
 		local nameTxt = fit_text(player_name, nameMax)
+		local remainingSpace = nameMax - #nameTxt
 		
-		if nameMax > 0 and #nameTxt > 0 then
-			term.setCursorPos(1, y1)
-			term.blit(nameTxt, string.rep("0", #nameTxt), string.rep("f", #nameTxt))
-			-- pad leftover gap (if any) up to the start of the Lv block
-			if #nameTxt < nameMax then
-				local gap = nameMax - #nameTxt
-				term.blit(string.rep(" ", gap), string.rep("0", gap), string.rep("f", gap))
-			end
-		else
-			-- clear line if name area is zero
-			term.setCursorPos(1, y1)
-			term.blit(string.rep(" ", nameMax), string.rep("0", nameMax), string.rep("f", nameMax))
-		end
+		term.setCursorPos(1, y1)
 
-		-- draw Lv block right-aligned
-		local lvX = w - lvW + 1
-		term.setCursorPos(lvX, y1)
-		term.blit(lvStr, string.rep("0", lvW), string.rep("f", lvW))
+		-- Draw Name
+		term.blit(nameTxt, string.rep("0", #nameTxt), string.rep("f", #nameTxt))
+		if remainingSpace > 0 then term.blit(" ", string.rep("f", remainingSpace), string.rep("f", remainingSpace)) end
 
-		-- ===== Line 2: HP red, spacer white, MP blue =====
-		local hpTxt = ("Hp %d/%d"):format(stats.hp or 0, stats.hp_max or 0)
-		local mpTxt = ("Mp %d/%d"):format(stats.mp or 0, stats.mp_max or 0)
-		local spacer = "  "
+		-- Draw Level
+		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
+		term.blit(lvStr, string.rep("0", #lvStr), string.rep("f", #lvStr))
 
-		local c2 = hpTxt .. spacer .. mpTxt
-		if #c2 > w then c2 = fit_text(c2, w) end
+		-- Draw Health
+		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
+		term.blit(hpStr, string.rep("e", #hpStr), string.rep("f", #hpStr))
 
-		local hpLen = math.min(#hpTxt, #c2)
-		local spLen = math.max(0, math.min(#spacer, #c2 - hpLen))
-		local mpLen = math.max(0, #c2 - hpLen - spLen)
-
-		local fg2 = string.rep("e", hpLen) .. string.rep("0", spLen) .. string.rep("b", mpLen) -- red/white/blue
-		local bg2 = string.rep("f", #c2)                                                        -- black
-
-		term.setCursorPos(1, y2)
-		term.blit(c2, fg2, bg2)
-		if #c2 < w then
-			term.blit(string.rep(" ", w-#c2), string.rep("0", w-#c2), string.rep("f", w-#c2))
-		end
+		-- Draw Mana
+		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
+		term.blit(mpStr, string.rep("b", #mpStr), string.rep("f", #mpStr))
 	end
 
 	term.setBackgroundColor(colors.black)
