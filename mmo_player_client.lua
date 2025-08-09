@@ -152,6 +152,12 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	local oy = math.floor((termH - HUD_ROWS - view_h)/2) + 1
 	if oy < 1 then oy = 1 end
 
+	stats.lv     = handshake.player.lv
+	stats.hp     = handshake.player.hp
+	stats.hp_max = handshake.player.hp_max
+	stats.mp     = handshake.player.mp
+	stats.mp_max = handshake.player.mp_max
+
 	term.setBackgroundColor(colors.black)
 	term.setCursorBlink(false)
 	term.clear()
@@ -210,6 +216,7 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 					stats.mp_max = handshake.player.mp_max
 
 					term.setBackgroundColor(colors.black); term.clear()
+
 					blit_rows(handshake.rows, ox, oy)
 					draw_hud_bottom(player_name, stats)
 				end
