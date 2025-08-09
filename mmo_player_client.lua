@@ -104,34 +104,43 @@ local function gameplay_loop(player_id, handshake)
 
 	blit_rows(handshake.rows, ox, oy)
 
+	local cur_dir = nil
+	local function send_dir(dir)
+		if dir ~= cur_dir then
+			cur_dir = dir
+			rednet.send(WORLD_ID, textutils.serialize({type="input_state", player_id=player_id, dir=cur_dir}), PROTO_MMO)
+		end
+	end
+
 	local running = true
 	local function inputs()
 		while running do
-			local ev, p1 = os.pullEventRaw()
+			local ev, p = os.pullEventRaw()
 			if ev == "key" then
-				local k = keys.getName(p1)
+				local k = keys.getName(p)
 				if k == "w" or k == "a" or k == "s" or k == "d" then
-					rednet.send(WORLD_ID, textutils.serialize({ type="input", player_id=player_id, key=k }), PROTO_MMO)
-					local _, raw = rednet.receive(PROTO_MMO, 2)
-					if raw then
-						local st = textutils.unserialize(raw)
-						if st and st.type == "state" then
-							term.setBackgroundColor(colors.black); term.clear()
-							blit_rows(st.rows, ox, oy)
-						end
-					end
+					send_dir(k)
 				elseif k == "q" then
 					running = false
 				end
+			elseif ev == "key_up" then
+				local k = keys.getName(p)
+				if cur_dir == k then
+					send_dir(nil)
+				end
 			elseif ev == "terminate" then
-				-- Ctrl+T: attempt clean logout
 				running = false
 			end
 		end
 	end
 
 	local function heartbeat()
-		heartbeat_loop(player_id)
+		while running do
+			rednet.send(WORLD_ID, textutils.serialize({type="heartbeat", player_id=player_id}), PROTO_MMO)
+			-- optional: re-assert input state to be safe
+			rednet.send(WORLD_ID, textutils.serialize({type="input_state", player_id=player_id, dir=cur_dir}), PROTO_MMO)
+			sleep(3)
+		end
 	end
 
 	local function updates()

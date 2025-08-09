@@ -11,6 +11,13 @@ local HEARTBEAT_TTL = 12 -- seconds; if no heartbeat, drop player
 local CLEANUP_PERIOD = 5 -- how often we scan for dead sessions
 local HALF_W, HALF_H = math.floor(VIEW_W/2), math.floor(VIEW_H/2)
 
+-- tick + movement rate
+local TICK_HZ = 10					-- server ticks per second
+local MOVE_COOLDOWN_TICKS = 2		-- 1 tile every 2 ticks => 5 tiles/sec at 10Hz
+
+-- remember which client ID to send frames to
+local sessions = {}					-- sessions[player_id] = computerID
+
 local PROTO_MMO = "mmo"
 rednet.host(PROTO_MMO, "mmo")
 
@@ -136,64 +143,88 @@ local function make_view_packet(id, p)
 end
 
 local next_cleanup = now() + CLEANUP_PERIOD
+local tick_timer = os.startTimer(1 / TICK_HZ)
 
 print("[WORLD] Server online.")
 
 while true do
-	local sender, raw, _ = rednet.receive(PROTO_MMO, 0.25) -- short poll so we can do cleanup
-	if sender and raw then
+	local ev, p1, p2 = os.pullEvent()  -- timer/rednet
+	if ev == "rednet_message" then
+		local sender, raw = p1, p2
 		local ok, msg = pcall(textutils.unserialize, raw)
 		if ok and type(msg) == "table" then
 			local t = msg.type
 			if t == "handshake" and msg.player_id then
 				local id = msg.player_id
+				sessions[id] = sender
 				spawn_if_needed(id); touch(id)
 				local p = players[id]
+				local rows = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
+				overlay_players(rows, id, p.x, p.y)
 				rednet.send(sender, textutils.serialize({
-					type	 = "handshake_ack",
-					player = { x = p.x, y = p.y },
-					rows   = (function()
-							local r = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
-							overlay_players(r, id, p.x, p.y)
-							return r
-						end)(),
-					view_w = VIEW_W, view_h = VIEW_H
+					type="handshake_ack", player={x=p.x,y=p.y}, rows=rows, view_w=VIEW_W, view_h=VIEW_H
 				}), PROTO_MMO)
 
-			elseif t == "input" and msg.player_id and msg.key then
+			elseif t == "input_state" and msg.player_id then
 				local id = msg.player_id
+				sessions[id] = sender
 				spawn_if_needed(id); touch(id)
-				local p = players[id]
-				if     msg.key == "w" then try_move(id, 0,-1)
-				elseif msg.key == "s" then try_move(id, 0, 1)
-				elseif msg.key == "a" then try_move(id,-1, 0)
-				elseif msg.key == "d" then try_move(id, 1, 0)
-				end
-				rednet.send(sender, textutils.serialize(make_view_packet(id, p)), PROTO_MMO)
+				players[id].input_dir = msg.dir
 
 			elseif t == "heartbeat" and msg.player_id then
+				sessions[msg.player_id] = sender
 				touch(msg.player_id)
-				local id = msg.player_id
-				local p = players[id]
-				if p then
-					rednet.send(sender, textutils.serialize(make_view_packet(id, p)), PROTO_MMO)
-				end
+
 			elseif t == "logout" and msg.player_id then
 				players[msg.player_id] = nil
-				rednet.send(sender, textutils.serialize({ type = "bye" }), PROTO_MMO)
+				sessions[msg.player_id] = nil
+				rednet.send(sender, textutils.serialize({type="bye"}), PROTO_MMO)
 			end
 		end
-	end
 
-	-- Periodic cleanup
-	local tnow = now()
-	if tnow >= next_cleanup then
-		next_cleanup = tnow + CLEANUP_PERIOD
+	elseif ev == "timer" and p1 == tick_timer then
+		-- process one fixed tick
 		for id, p in pairs(players) do
-			if (tnow - (p.last_seen or 0)) > HEARTBEAT_TTL then
-				print(("[WORLD] Dropping inactive %s"):format(id))
-				players[id] = nil
+			-- cooldown
+			if p.move_cd and p.move_cd > 0 then
+				p.move_cd = p.move_cd - 1
+			end
+			-- apply input at fixed rate
+			if (p.move_cd or 0) <= 0 and p.input_dir then
+				local dx, dy = 0, 0
+				if p.input_dir == "w" then dy = -1
+				elseif p.input_dir == "s" then dy = 1
+				elseif p.input_dir == "a" then dx = -1
+				elseif p.input_dir == "d" then dx = 1 end
+				if dx ~= 0 or dy ~= 0 then
+					try_move(id, dx, dy)	-- already checks map + player collision
+					p.move_cd = MOVE_COOLDOWN_TICKS
+				end
 			end
 		end
+		-- push frames to connected clients
+		for id, cid in pairs(sessions) do
+			local p = players[id]
+			if p and cid then
+				rednet.send(cid, textutils.serialize(make_view_packet(id, p)), PROTO_MMO)
+			else
+				sessions[id] = nil
+			end
+		end
+
+		-- cleanup cadence
+		local tnow = now()
+		if tnow >= next_cleanup then
+			next_cleanup = tnow + CLEANUP_PERIOD
+			for id, p in pairs(players) do
+				if (tnow - (p.last_seen or 0)) > HEARTBEAT_TTL then
+					players[id] = nil
+					sessions[id] = nil
+				end
+			end
+		end
+
+		-- schedule next tick
+		tick_timer = os.startTimer(1 / TICK_HZ)
 	end
 end
