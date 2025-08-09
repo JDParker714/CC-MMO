@@ -126,7 +126,7 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 
 		-- Draw Name
 		term.blit(nameTxt, string.rep("0", #nameTxt), string.rep("f", #nameTxt))
-		if remainingSpace > 0 then term.blit(" ", string.rep("f", remainingSpace), string.rep("f", remainingSpace)) end
+		if remainingSpace > 0 then term.blit(string.rep(" ", remainingSpace), string.rep("f", remainingSpace), string.rep("f", remainingSpace)) end
 
 		-- Draw Level
 		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
@@ -193,11 +193,11 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 			if raw then
 				local st = textutils.unserialize(raw)
 				if st and st.type == "state" then
-					stats.lv     = handshake.player.lv
-					stats.hp     = handshake.player.hp
-					stats.hp_max = handshake.player.hp_max
-					stats.mp     = handshake.player.mp
-					stats.mp_max = handshake.player.mp_max
+					stats.lv     = st.player.lv
+					stats.hp     = st.player.hp
+					stats.hp_max = st.player.hp_max
+					stats.mp     = st.player.mp
+					stats.mp_max = st.player.mp_max
 
 					term.setBackgroundColor(colors.black); term.clear()
 
@@ -232,8 +232,12 @@ while true do
 			print(err or "World handshake failed.")
 			drive.ejectDisk(); sleep(2)
 		else
-			pcall(gameplay_loop, auth.id, handshake, player_name, last_stats)
-			drive.ejectDisk()
+			local ok, err = pcall(gameplay_loop, auth.id, handshake, player_name, last_stats)
+			if not ok then
+				print("Client error: " .. tostring(err))
+			else
+				drive.ejectDisk()
+			end
 		end
 	end
 	print("\n(Press any key to return to login...)"); os.pullEvent("key")
