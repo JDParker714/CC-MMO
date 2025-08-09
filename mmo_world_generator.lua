@@ -20,47 +20,57 @@ local function solid_row(ch, fg, bg, n)
 end
 
 local function build_chunk(cx, cy)
+	-- keep your existing colors (they looked good for you)
 	local rows = {}
 	local grass_fg, grass_bg = "5","d"
 	local road_fg,  road_bg  = "4","8"
 	local wall_fg,  wall_bg  = "f","7"
 
-	-- World coordinate of chunk's top-left
+	-- Chunk's top-left in world coords
 	local wx0, wy0 = cx * CHUNK_W, cy * CHUNK_H
 
-	for y = 1, CHUNK_H do
-		rows[y] = solid_row(".", grass_fg, grass_bg, CHUNK_W)
-	end
-
-	-- Center lines for roads
+	-- World midlines for roads
 	local road_x = math.floor(WORLD_W / 2)
 	local road_y = math.floor(WORLD_H / 2)
 
 	for y = 1, CHUNK_H do
+		local c_line, fg_line, bg_line = {}, {}, {}
 		for x = 1, CHUNK_W do
 			local wx, wy = wx0 + (x - 1), wy0 + (y - 1)
 
-			-- Horizontal road
-			if wy == road_y then
-				rows[y].c  = rows[y].c:sub(1, x-1) .. "-" .. rows[y].c:sub(x+1)
-				rows[y].fg = rows[y].fg:sub(1, x-1) .. road_fg .. rows[y].fg:sub(x+1)
-				rows[y].bg = rows[y].bg:sub(1, x-1) .. road_bg .. rows[y].bg:sub(x+1)
+			-- Default: grass checkerboard text pattern
+			local ch   = (((wx + wy) % 2) == 0) and "." or "v"
+			local fg   = grass_fg
+			local bg   = grass_bg
+
+			-- Border walls (override everything)
+			local on_border = (wx == 0 or wy == 0 or wx == WORLD_W - 1 or wy == WORLD_H - 1)
+			if on_border then
+				ch, fg, bg = "#", wall_fg, wall_bg
+			else
+				-- Roads only on interior tiles (stop before walls)
+				local on_h_road = (wy == road_y) and (wx > 0 and wx < WORLD_W - 1)
+				local on_v_road = (wx == road_x) and (wy > 0 and wy < WORLD_H - 1)
+
+				if on_h_road and on_v_road then
+					ch, fg, bg = "+", road_fg, road_bg
+				elseif on_h_road then
+					ch, fg, bg = "-", road_fg, road_bg
+				elseif on_v_road then
+					ch, fg, bg = "|", road_fg, road_bg
+				end
 			end
 
-			-- Vertical road
-			if wx == road_x then
-				rows[y].c  = rows[y].c:sub(1, x-1) .. "|" .. rows[y].c:sub(x+1)
-				rows[y].fg = rows[y].fg:sub(1, x-1) .. road_fg .. rows[y].fg:sub(x+1)
-				rows[y].bg = rows[y].bg:sub(1, x-1) .. road_bg .. rows[y].bg:sub(x+1)
-			end
-
-			-- Border walls
-			if wx == 0 or wy == 0 or wx == WORLD_W - 1 or wy == WORLD_H - 1 then
-				rows[y].c  = rows[y].c:sub(1, x-1) .. "#" .. rows[y].c:sub(x+1)
-				rows[y].fg = rows[y].fg:sub(1, x-1) .. wall_fg .. rows[y].fg:sub(x+1)
-				rows[y].bg = rows[y].bg:sub(1, x-1) .. wall_bg .. rows[y].bg:sub(x+1)
-			end
+			c_line[#c_line+1]  = ch
+			fg_line[#fg_line+1]= fg
+			bg_line[#bg_line+1]= bg
 		end
+
+		rows[y] = {
+			c  = table.concat(c_line),
+			fg = table.concat(fg_line),
+			bg = table.concat(bg_line)
+		}
 	end
 
 	return rows
