@@ -132,14 +132,14 @@ local npc_x, npc_y = find_free_spawn(60, 40, 5)
 spawn_npc(npc_x, npc_y, {
   "Shh. Watch for goblins by the gate.",
   "They love shiny coins. And ankles."
-}, "Guard", { glyph = "N", fg = "d", bg = "3" })
+}, "Guard", { glyph = "N", fg = "0", bg = "3" })
 
 npc_x, npc_y = find_free_spawn(40, 60, 5)
 spawn_npc(npc_x, npc_y, {
   "Have you seen my wife around?.",
   "I brought her some sheet metal to eat!",
-  "Nothing bad happens to the Kennedy's"
-}, "JFK", { glyph = "N", fg = "d", bg = "3" })
+  "Nothing bad happens to the Kennedy's!"
+}, "JFK", { glyph = "N", fg = "0", bg = "3" })
 
 local function spawn_if_needed(id)
 	if not players[id] then

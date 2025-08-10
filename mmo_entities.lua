@@ -120,10 +120,12 @@ M.register("dragon", {
 		-- Find nearest player within 12 tiles; else idle
 		local best_id, best_d, best_dx, best_dy = nil, math.huge, 0, 0
 		for id, p in pairs(players) do
-			local dx, dy = p.x - self.x, p.y - self.y
-			local d = math.sqrt(dx * dx + dy * dy)
-			if d < best_d then
-				best_d = d; best_id = id; best_dx = dx; best_dy = dy
+			if p.mode ~= "dialogue" then
+				local dx, dy = p.x - self.x, p.y - self.y
+				local d = math.sqrt(dx * dx + dy * dy)
+				if d < best_d then
+					best_d = d; best_id = id; best_dx = dx; best_dy = dy
+				end
 			end
 		end
 		if best_id and best_d <= 15 then
