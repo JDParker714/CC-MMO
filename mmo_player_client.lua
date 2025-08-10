@@ -108,9 +108,9 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	end
 
 	local function draw_box(x, y, w, h)
-		local top    = "╔" .. string.rep("═", w-2) .. "╗"
-		local mid    = "║" .. string.rep(" ", w-2) .. "║"
-		local bot    = "╚" .. string.rep("═", w-2) .. "╝"
+		local top    = string.char(201) .. string.rep(string.char(205), w-2) .. string.char(187)
+		local mid    = string.char(186) .. string.rep(" ", w-2) .. string.char(186)
+		local bot    = string.char(200) .. string.rep(string.char(205), w-2) .. string.char(188)
 		term.setCursorPos(x, y); write(top)
 		for i=1,h-2 do term.setCursorPos(x, y+i); write(mid) end
 		term.setCursorPos(x, y+h-1); write(top)

@@ -17,14 +17,14 @@ local CHUNK_W, CHUNK_H = atlas.CHUNK_W, atlas.CHUNK_H
 local BRUSH_PRESETS = {
 	[1] = { ch = "g", fg = "5", bg = "d" },	-- grass base
 	[2] = { ch = "#", fg = "8", bg = "7" },	-- wall
-	[3] = { ch = "░", fg = "c", bg = "1" },	-- cliff
-	[4] = { ch = "≡", fg = "7", bg = "8" },	-- stairs
+	[3] = { ch = string.char(176), fg = "c", bg = "1" },	-- cliff
+	[4] = { ch = string.char(240), fg = "7", bg = "8" },	-- stairs
 	[5] = { ch = "s", fg = "1", bg = "4" },	-- sand
-	[6] = { ch = "│", fg = "4", bg = "8" },	-- road vertical
-	[7] = { ch = "─", fg = "4", bg = "8" },	-- road horizontal
-	[8] = { ch = "┼", fg = "4", bg = "8" },	-- road cross
-	[9] = { ch = "▒", fg = "3", bg = "b" },	-- water
-	[0] = { ch = "┼", fg = "1", bg = "c" },	-- flooring
+	[6] = { ch = string.char(179), fg = "4", bg = "8" },	-- road vertical
+	[7] = { ch = string.char(196), fg = "4", bg = "8" },	-- road horizontal
+	[8] = { ch = string.char(197), fg = "4", bg = "8" },	-- road cross
+	[9] = { ch = string.char(177), fg = "3", bg = "b" },	-- water
+	[0] = { ch = string.char(197), fg = "1", bg = "c" },	-- flooring
 }
 
 -- ---------- Post-process rules ----------
@@ -34,14 +34,14 @@ local POST_RULES = {
 	{
 		fg = "5",
 		bg = "d",
-		glyphs = { ["g"]=true, ["."]=true, ["!"]=true },
-		pattern = { even = ".", odd = "~" }, -- (x+y)%2==0 -> ".", else "v"
+		glyphs = { ["g"]=true, ["."]=true, ["v"]=true },
+		pattern = { even = ".", odd = "v" }, 
 	},
     {
 		fg = "1",
 		bg = "4",
 		glyphs = { ["s"]=true, ["."]=true, ["~"]=true },
-		pattern = { even = ".", odd = "v" }, -- (x+y)%2==0 -> ".", else "v"
+		pattern = { even = ".", odd = "~" }, 
 	},
 }
 
