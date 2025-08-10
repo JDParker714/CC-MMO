@@ -12,19 +12,21 @@ local WORLD_DIR = "world"
 local FULL_PATH = fs.combine(WORLD_DIR, "full.tbl")
 local CHUNK_W, CHUNK_H = atlas.CHUNK_W, atlas.CHUNK_H
 
+local WALL_TILE = { ch = "#", fg = "8", bg = "7" }
+
 -- Initialize saved brush slots (edit these to set your defaults).
 -- Slots: 1..9 and 0 (for key '0'). Each has ch = glyph, fg/bg = hex blit colors "0".."f"
 local BRUSH_PRESETS = {
 	[1] = { ch = "g", fg = "5", bg = "d" },	-- grass base
 	[2] = { ch = "#", fg = "8", bg = "7" },	-- wall
-	[3] = { ch = "#", fg = "c", bg = "1" },	-- cliff
+	[3] = { ch = "#", fg = "7", bg = "c" },	-- cliff
 	[4] = { ch = "=", fg = "7", bg = "8" },	-- stairs
 	[5] = { ch = "s", fg = "1", bg = "4" },	-- sand
 	[6] = { ch = "|", fg = "4", bg = "8" },	-- road vertical
 	[7] = { ch = "-", fg = "4", bg = "8" },	-- road horizontal
 	[8] = { ch = "+", fg = "4", bg = "8" },	-- road cross
 	[9] = { ch = "#", fg = "3", bg = "b" },	-- water
-	[0] = { ch = "+", fg = "1", bg = "c" },	-- flooring
+	[0] = { ch = "+", fg = "8", bg = "c" },	-- flooring
 }
 
 -- ---------- Post-process rules ----------
@@ -305,6 +307,17 @@ local function recall_brush_slot(n)
 	local b = brushes[n]; if b then brush.ch, brush.fg, brush.bg = b.ch, b.fg, b.bg end
 end
 
+local function enforce_border_walls()
+  for y = 1, world.h do
+    for x = 1, world.w do
+      if x == 1 or y == 1 or x == world.w or y == world.h then
+        local cell = map[y][x]
+        cell.ch, cell.fg, cell.bg = WALL_TILE.ch, WALL_TILE.fg, WALL_TILE.bg
+      end
+    end
+  end
+end
+
 -- ---------- File Ops ----------
 local function do_save_all()
 	save_full()
@@ -320,6 +333,7 @@ if not loaded then
 		print("Invalid size."); return
 	end
 	init_world(w, h)
+    enforce_border_walls()
 	save_full()
 else
 	print(("Loaded existing map: %dx%d"):format(world.w, world.h))
