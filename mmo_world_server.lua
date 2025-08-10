@@ -57,9 +57,16 @@ local function spawn_n_mobs_random(kind, n)
 	end
 end
 
-local function spawn_npc(x, y, lines, name)
-  local npc = entities.new("npc", x, y, { name = name or "NPC", lines = lines or {} })
-  table.insert(mobs, npc)
+local function spawn_npc(x, y, lines, name, visual)
+	local npc = entities.new("npc", x, y, {
+		name  = name or "NPC",
+		lines = lines or {},
+		-- optional visual overrides:
+		glyph = visual and visual.glyph or "N",
+		fg    = visual and visual.fg    or "0",  -- "0".."f" (term.blit hex)
+		bg    = visual and visual.bg    or "3"
+	})
+	table.insert(mobs, npc)
 end
 
 -- Spawn Mobs
@@ -121,11 +128,18 @@ local function find_free_spawn(pref_x, pref_y, max_radius)
 end
 
 -- Spawn Npc's
-local npx_x, npx_y = find_free_spawn(60, 40, 5)
-spawn_npc(npx_x, npx_y, {
+local npc_x, npc_y = find_free_spawn(60, 40, 5)
+spawn_npc(npc_x, npc_y, {
   "Shh. Watch for goblins by the gate.",
   "They love shiny coins. And ankles."
-}, "Guard")
+}, "Guard", { glyph = "N", fg = "d", bg = "3" })
+
+npc_x, npc_y = find_free_spawn(40, 60, 5)
+spawn_npc(npc_x, npc_y, {
+  "Have you seen my wife around?.",
+  "I brought her some sheet metal to eat!",
+  "Nothing bad happens to the Kennedy's"
+}, "JFK", { glyph = "N", fg = "d", bg = "3" })
 
 local function spawn_if_needed(id)
 	if not players[id] then
