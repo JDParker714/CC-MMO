@@ -121,7 +121,8 @@ local function find_free_spawn(pref_x, pref_y, max_radius)
 end
 
 -- Spawn Npc's
-spawn_npc(find_free_spawn(60, 40, 5), {
+local npx_x, npx_y = find_free_spawn(60, 40, 5)
+spawn_npc(npx_x, npx_y, {
   "Shh. Watch for goblins by the gate.",
   "They love shiny coins. And ankles."
 }, "Guard")
