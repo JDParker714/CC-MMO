@@ -98,11 +98,46 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	stats.mp     = handshake.player.mp
 	stats.mp_max = handshake.player.mp_max
 
+	local in_dialogue = false
+
 	-- ========== UI Functions ==========
 	local function fit_text(s, maxw)
 		if #s <= maxw then return s end
 		if maxw <= 1 then return s:sub(1, maxw) end
 		return s:sub(1, maxw-1) .. "…"
+	end
+
+	local function draw_box(x, y, w, h)
+		local top    = "+" .. string.rep("-", w-2) .. "+"
+		local mid    = "|" .. string.rep(" ", w-2) .. "|"
+		term.setCursorPos(x, y); write(top)
+		for i=1,h-2 do term.setCursorPos(x, y+i); write(mid) end
+		term.setCursorPos(x, y+h-1); write(top)
+	end
+
+	local function draw_dialogue_box(dlg, hud_reserved_rows)
+		if not dlg then return end
+		local w, h = term.getSize()
+		local box_h = 5
+		local box_w = math.min(w-2, 46)  -- keep it tidy
+		local bx = math.floor((w - box_w)/2) + 1
+		local by = h - box_h - (hud_reserved_rows or 1)
+
+		term.setTextColor(colors.white); term.setBackgroundColor(colors.black)
+		draw_box(bx, by, box_w, box_h)
+
+		-- Title
+		local title = (" %s (%d/%d) "):format(dlg.speaker or "NPC", dlg.line_i or 1, dlg.line_n or 1)
+		term.setCursorPos(bx + 2, by); write(title)
+
+		-- Text (single line; can wrap later)
+		local maxw = box_w - 4
+		local s = dlg.text or ""
+		if #s > maxw then s = s:sub(1, maxw) end
+		term.setCursorPos(bx + 2, by + 2); write(s)
+
+		-- Hint
+		term.setCursorPos(bx + 2, by + box_h - 2); write("Press E to continue")
 	end
 
 	local function draw_hud_bottom()
@@ -162,10 +197,12 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 			local ev, p = os.pullEventRaw()
 			if ev == "key" then
 				local k = keys.getName(p)
-				if k == "w" or k == "a" or k == "s" or k == "d" then
+				if (k == "w" or k == "a" or k == "s" or k == "d") and not in_dialogue then
 					send_dir(k)
 				elseif k == "q" then
 					running = false
+				elseif k == "e" then
+					rednet.send(WORLD_ID, textutils.serialize({type="interact", player_id=player_id}), PROTO_MMO)
 				end
 			elseif ev == "key_up" then
 				local k = keys.getName(p)
@@ -203,6 +240,12 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 
 					blit_rows(st.rows, ox, oy)       -- draw the new frame
 					draw_hud_bottom()    
+
+					local server_mode = st.player and st.player.mode
+					in_dialogue = (server_mode == "dialogue") or (st.dialogue ~= nil)
+					if in_dialogue then
+						draw_dialogue_box(st.dialogue, 1) -- '1' if your HUD uses one bottom row
+					end
 				end
 			end
 		end

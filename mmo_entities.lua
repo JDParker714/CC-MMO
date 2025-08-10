@@ -83,6 +83,7 @@ function M.new(kind, x, y, opts)
 	assert(T, "Unknown entity kind: "..tostring(kind))
 	opts = opts or {}
 	opts.x, opts.y = x, y
+	opts.kind = kind
 	return T:new(opts)
 end
 
@@ -142,6 +143,14 @@ M.register("dragon", {
 			else              return 1, 0 end
 		end
 		return 0, 0
+	end
+})
+
+-- NPC: does not move; holds dialogue lines and a trigger radius
+M.register("npc", {
+	glyph = "N", fg = "0", bg = "8", cd_max = 999999,
+	think = function(self, players, entities)
+		return 0, 0  -- totally stationary
 	end
 })
 

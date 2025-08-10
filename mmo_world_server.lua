@@ -17,6 +17,12 @@ local HALF_W, HALF_H = math.floor(VIEW_W/2), math.floor(VIEW_H/2)
 local TICK_HZ = 10					-- server ticks per second
 local MOVE_COOLDOWN_TICKS = 2		-- 1 tile every 2 ticks => 5 tiles/sec at 10Hz
 
+-- Dialogue tuning
+local DIALOGUE_TRIGGER_RADIUS = 2         -- distance to start talking
+local TYPEWRITER_CHARS_PER_TICK = 2       -- feel free to tweak
+local DIALOGUE_LINE_HOLD_TICKS = 10       -- pause after each full line
+local DIALOGUE_END_HOLD_TICKS  = 12       -- pause after last line
+
 -- remember which client ID to send frames to
 local sessions = {}					-- sessions[player_id] = computerID
 
@@ -51,6 +57,12 @@ local function spawn_n_mobs_random(kind, n)
 	end
 end
 
+local function spawn_npc(x, y, lines, name)
+  local npc = entities.new("npc", x, y, { name = name or "NPC", lines = lines or {} })
+  table.insert(mobs, npc)
+end
+
+-- Spawn Mobs
 spawn_n_mobs_random("goblin", 8)
 spawn_n_mobs_random("raider", 4)
 spawn_n_mobs_random("dragon", 2)
@@ -108,6 +120,12 @@ local function find_free_spawn(pref_x, pref_y, max_radius)
 	return pref_x, pref_y
 end
 
+-- Spawn Npc's
+spawn_npc(find_free_spawn(60, 40, 5), {
+  "Shh. Watch for goblins by the gate.",
+  "They love shiny coins. And ankles."
+}, "Guard")
+
 local function spawn_if_needed(id)
 	if not players[id] then
 		local sx, sy = find_free_spawn(50, 50)
@@ -121,7 +139,10 @@ local function spawn_if_needed(id)
 			-- Player Stats
 			lv = 10,
 			hp = 100, hp_max = 100,
-			mp = 50,  mp_max = 50
+			mp = 50,  mp_max = 50,
+			-- Dialogue (nil when not talking)
+			dialogue = nil,      -- { speaker, lines, li, ci, hold, done, npc_x, npc_y }
+			mode = "play"   -- "play" | "dialogue"
 		}
 	end
 end
@@ -187,17 +208,80 @@ local function make_view_packet(id, p)
 	local rows = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
 	overlay_players(rows, id, p.x, p.y)
 	overlay_entities(rows, p.x, p.y)
+
+	local dlg = nil
+	if p.dialogue then
+		local line = p.dialogue.lines[p.dialogue.li] or ""
+		dlg = {
+			speaker = p.dialogue.speaker,
+			line_i  = p.dialogue.li,
+			line_n  = #p.dialogue.lines,
+			text    = string.sub(line, 1, p.dialogue.ci),
+		}
+	end
+
 	return {
 		type = "state",
 		player = {
 			x = p.x, y = p.y,
 			lv = p.lv,
 			hp = p.hp, hp_max = p.hp_max,
-			mp = p.mp, mp_max = p.mp_max
+			mp = p.mp, mp_max = p.mp_max,
+			mode = p.mode, 
 		},
 		rows = rows,
-		view_w = VIEW_W, view_h = VIEW_H
+		view_w = VIEW_W, view_h = VIEW_H,
+		dialogue = dlg
 	}
+end
+
+local function find_nearest_npc(px, py, radius)
+	local best, bestd = nil, math.huge
+	for _, e in ipairs(mobs) do
+		if e.kind == "npc" then
+			local d = math.abs(px - e.x) + math.abs(py - e.y)
+			if d <= radius and d < bestd then best, bestd = e, d end
+		end
+	end
+	return best
+end
+
+local function start_dialogue(p, npc)
+	p.mode = "dialogue"
+	p.dialogue = {
+		speaker = npc.name or "NPC",
+		lines   = npc.lines or {},
+		li      = 1,     -- line index
+		ci      = 0,     -- char index (typewriter progress)
+		done    = false,
+		npc_x   = npc.x, npc_y = npc.y
+	}
+end
+
+local function tick_typewriter(p)
+	if not p.dialogue or p.dialogue.done then return end
+	local line = p.dialogue.lines[p.dialogue.li] or ""
+	if p.dialogue.ci < #line then
+		p.dialogue.ci = math.min(#line, p.dialogue.ci + TYPEWRITER_CHARS_PER_TICK)
+	end
+end
+
+local function advance_or_close_dialogue(p)
+	local d = p.dialogue
+	if not d then return end
+	local line = d.lines[d.li] or ""
+	if d.ci < #line then
+		-- finish current line instantly
+		d.ci = #line
+		return
+	end
+	-- already finished line -> go next or close
+	d.li = d.li + 1
+	d.ci = 0
+	if d.li > #d.lines then
+		p.dialogue = nil
+		p.mode = "play"
+	end
 end
 
 local next_cleanup = now() + CLEANUP_PERIOD
@@ -219,6 +303,7 @@ while true do
 				local p = players[id]
 				local rows = world.get_view(p.x, p.y, VIEW_W, VIEW_H)
 				overlay_players(rows, id, p.x, p.y)
+				overlay_entities(rows, p.x, p.y)   
 				rednet.send(sender, textutils.serialize({
 					type = "handshake_ack",
 					player = {
@@ -236,6 +321,17 @@ while true do
 				sessions[id] = sender
 				spawn_if_needed(id); touch(id)
 				players[id].input_dir = msg.dir
+
+			elseif msg.type == "interact" then
+				local p = players[msg.player_id]
+				if p then
+					if p.mode ~= "dialogue" then
+						local npc = find_nearest_npc(p.x, p.y, DIALOGUE_TRIGGER_RADIUS)
+						if npc then start_dialogue(p, npc) end
+					else
+						advance_or_close_dialogue(p)
+					end
+				end
 
 			elseif t == "heartbeat" and msg.player_id then
 				sessions[msg.player_id] = sender
@@ -259,18 +355,23 @@ while true do
 			if p.move_cd and p.move_cd > 0 then
 				p.move_cd = p.move_cd - 1
 			end
-			-- apply input at fixed rate
-			if (p.move_cd or 0) <= 0 and p.input_dir then
-				local dx, dy = 0, 0
-				if p.input_dir == "w" then dy = -1
-				elseif p.input_dir == "s" then dy = 1
-				elseif p.input_dir == "a" then dx = -1
-				elseif p.input_dir == "d" then dx = 1 end
-				if dx ~= 0 or dy ~= 0 then
-					try_move(id, dx, dy)	-- already checks map + player collision
-					p.last_dx = dx
-       				p.last_dy = dy
-					p.move_cd = MOVE_COOLDOWN_TICKS
+
+			if p.mode == "dialogue" then
+				tick_typewriter(p)   -- just animate the text; no movement
+			else
+				-- apply input at fixed rate
+				if (p.move_cd or 0) <= 0 and p.input_dir then
+					local dx, dy = 0, 0
+					if p.input_dir == "w" then dy = -1
+					elseif p.input_dir == "s" then dy = 1
+					elseif p.input_dir == "a" then dx = -1
+					elseif p.input_dir == "d" then dx = 1 end
+					if dx ~= 0 or dy ~= 0 then
+						try_move(id, dx, dy)	-- already checks map + player collision
+						p.last_dx = dx
+						p.last_dy = dy
+						p.move_cd = MOVE_COOLDOWN_TICKS
+					end
 				end
 			end
 		end
