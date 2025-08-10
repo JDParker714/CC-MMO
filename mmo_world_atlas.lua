@@ -56,7 +56,7 @@ function M.is_blocked(wx, wy)
 	if not ch or not ch.rows[ly] then return true end	-- void = blocked
 	local r = ch.rows[ly]
 	local tile = r.c:sub(lx, lx)
-	return tile == "#"
+	return tile == "#" or tile == "░" or tile == "▒" or tile == "▓"
 end
 
 -- Return a viewport centered on (wx,wy) with size (vw,vh) as rows of {c,fg,bg}

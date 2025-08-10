@@ -108,8 +108,9 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	end
 
 	local function draw_box(x, y, w, h)
-		local top    = "+" .. string.rep("-", w-2) .. "+"
-		local mid    = "|" .. string.rep(" ", w-2) .. "|"
+		local top    = "╔" .. string.rep("═", w-2) .. "╗"
+		local mid    = "║" .. string.rep(" ", w-2) .. "║"
+		local bot    = "╚" .. string.rep("═", w-2) .. "╝"
 		term.setCursorPos(x, y); write(top)
 		for i=1,h-2 do term.setCursorPos(x, y+i); write(mid) end
 		term.setCursorPos(x, y+h-1); write(top)
@@ -128,15 +129,18 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 
 		-- Title
 		local title = (" %s (%d/%d) "):format(dlg.speaker or "NPC", dlg.line_i or 1, dlg.line_n or 1)
+		term.setTextColor(colors.lime); term.setBackgroundColor(colors.black)
 		term.setCursorPos(bx + 2, by); write(title)
 
 		-- Text (single line; can wrap later)
 		local maxw = box_w - 4
 		local s = dlg.text or ""
 		if #s > maxw then s = s:sub(1, maxw) end
+		term.setTextColor(colors.white); term.setBackgroundColor(colors.black)
 		term.setCursorPos(bx + 2, by + 2); write(s)
 
 		-- Hint
+		term.setTextColor(colors.lightGray); term.setBackgroundColor(colors.black)
 		term.setCursorPos(bx + 2, by + box_h - 2); write("Press E to continue")
 	end
 

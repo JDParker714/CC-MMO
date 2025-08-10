@@ -77,6 +77,14 @@ local function waitForPlayerDisk()
 	end
 end
 
+local function is_blocked(item_name)
+	-- Block anything with "iron" in the registry id, e.g.
+	-- minecraft:iron_ingot, minecraft:raw_iron, minecraft:deepslate_iron_ore,
+	-- modded items like create:iron_sheet, etc.
+	item_name = item_name or ""
+	return string.find(item_name, "iron", 1, true) ~= nil
+end
+
 -- Main loop
 while true do
 	print("\n=== Sell Shop Terminal ===")
@@ -126,14 +134,18 @@ while true do
 		local sold_something = false
 
 		for slot, item in pairs(items) do
-			local price = price_table[item.name]
-			if price then
-				input_chest.pushItems(peripheral.getName(output_chest), slot)
-				sold_total = sold_total + price * item.count
-				sold_something = true
-				print("Sold " .. item.count .. "x " .. item.name .. " for G" .. (price * item.count))
-				last_sale_time = os.clock()
-				sleep(0.5)
+			if is_blocked(item.name) then
+				print("Blocked: " .. item.count .. "x " .. item.name .. " (not for sale)")
+			else
+				local price = price_table[item.name]
+				if price then
+					input_chest.pushItems(peripheral.getName(output_chest), slot)
+					sold_total = sold_total + price * item.count
+					sold_something = true
+					print("Sold " .. item.count .. "x " .. item.name .. " for G" .. (price * item.count))
+					last_sale_time = os.clock()
+					sleep(0.5)
+				end
 			end
 		end
 
