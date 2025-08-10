@@ -308,14 +308,13 @@ local function recall_brush_slot(n)
 end
 
 local function enforce_border_walls()
-  for y = 1, world.h do
-    for x = 1, world.w do
-      if x == 1 or y == 1 or x == world.w or y == world.h then
-        local cell = map[y][x]
-        cell.ch, cell.fg, cell.bg = WALL_TILE.ch, WALL_TILE.fg, WALL_TILE.bg
-      end
+    for y = 1, world.h do
+        for x = 1, world.w do
+            if x == 1 or y == 1 or x == world.w or y == world.h then
+                set_cell(x, y, WALL_TILE.ch, WALL_TILE.fg, WALL_TILE.bg)
+            end
+        end
     end
-  end
 end
 
 -- ---------- File Ops ----------
