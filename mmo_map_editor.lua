@@ -12,36 +12,43 @@ local WORLD_DIR = "world"
 local FULL_PATH = fs.combine(WORLD_DIR, "full.tbl")
 local CHUNK_W, CHUNK_H = atlas.CHUNK_W, atlas.CHUNK_H
 
+local SHADE_LIGHT  = "\226\150\145" -- U+2591 ░
+local SHADE_MEDIUM = "\226\150\146" -- U+2592 ▒
+local SHADE_DARK   = "\226\150\147" -- U+2593 ▓
+local BOX_VERT     = "\226\148\130" -- U+2502 │
+local BOX_HORZ    = "\226\148\128" -- U+2500 ─
+local BOX_CROSS    = "\226\148\188" -- U+253C ┼
+local TRIPLE_BAR   = "\226\137\161" -- U+2261 ≡
+
 -- Initialize saved brush slots (edit these to set your defaults).
 -- Slots: 1..9 and 0 (for key '0'). Each has ch = glyph, fg/bg = hex blit colors "0".."f"
 local BRUSH_PRESETS = {
 	[1] = { ch = "g", fg = "5", bg = "d" },	-- grass base
 	[2] = { ch = "#", fg = "8", bg = "7" },	-- wall
-	[3] = { ch = string.char(176), fg = "c", bg = "1" },	-- cliff
-	[4] = { ch = string.char(240), fg = "7", bg = "8" },	-- stairs
+	[3] = { ch = SHADE_LIGHT, fg = "c", bg = "1" },	-- cliff
+	[4] = { ch = TRIPLE_BAR, fg = "7", bg = "8" },	-- stairs
 	[5] = { ch = "s", fg = "1", bg = "4" },	-- sand
-	[6] = { ch = string.char(179), fg = "4", bg = "8" },	-- road vertical
-	[7] = { ch = string.char(196), fg = "4", bg = "8" },	-- road horizontal
-	[8] = { ch = string.char(197), fg = "4", bg = "8" },	-- road cross
-	[9] = { ch = string.char(177), fg = "3", bg = "b" },	-- water
-	[0] = { ch = string.char(197), fg = "1", bg = "c" },	-- flooring
+	[6] = { ch = BOX_VERT, fg = "4", bg = "8" },	-- road vertical
+	[7] = { ch = BOX_HORZ, fg = "4", bg = "8" },	-- road horizontal
+	[8] = { ch = BOX_CROSS, fg = "4", bg = "8" },	-- road cross
+	[9] = { ch = SHADE_MEDIUM, fg = "3", bg = "b" },	-- water
+	[0] = { ch = BOX_CROSS, fg = "1", bg = "c" },	-- flooring
 }
 
 -- ---------- Post-process rules ----------
--- Each rule: fg (hex char), bg (hex char), glyphs = set{ [ch]=true }, pattern.even / pattern.odd
--- Example: grass beautifier (breaks up large patches).
+-- Each rule: fg (hex), bg (hex), glyphs = set{ [ch]=true }, pattern.even / pattern.odd
 local POST_RULES = {
 	{
 		fg = "5",
 		bg = "d",
 		glyphs = { ["g"]=true, ["."]=true, ["v"]=true },
-		pattern = { even = ".", odd = "v" }, 
+		pattern = { even = ".", odd = "v" },
 	},
-    {
+	{
 		fg = "1",
 		bg = "4",
 		glyphs = { ["s"]=true, ["."]=true, ["~"]=true },
-		pattern = { even = ".", odd = "~" }, 
+		pattern = { even = ".", odd = "~" },
 	},
 }
 
@@ -59,9 +66,41 @@ local function read_line(prompt)
 	return s
 end
 
-local function replace_at(s, i, ch)
-	if i < 1 or i > #s then return s end
-	return s:sub(1, i-1) .. ch .. s:sub(i+1)
+-- UTF-8 helpers (work even if 'utf8' lib is minimal)
+local function utf8_len(s)
+	local len = 0
+	for _ in string.gmatch(s, "[%z\1-\127\194-\244][\128-\191]*") do len = len + 1 end
+	return len
+end
+
+local function utf8_byte_index(s, ci) -- 1-based character index -> byte index
+	if ci <= 1 then return 1 end
+	local i, count = 1, 1
+	local len = #s
+	while i <= len do
+		if count == ci then return i end
+		local b = string.byte(s, i)
+		local step = (b < 0x80) and 1 or (b < 0xE0) and 2 or (b < 0xF0) and 3 or 4
+		i = i + step
+		count = count + 1
+	end
+	-- past end -> return len+1 so sub() with [i, i-1] yields ""
+	return len + 1
+end
+
+local function utf8_sub(s, i, j)
+	-- 1-based character indices inclusive
+	local bi = utf8_byte_index(s, i)
+	local bj = utf8_byte_index(s, (j or i) + 1) - 1
+	if bi > #s or bj < bi then return "" end
+	return s:sub(bi, bj)
+end
+
+local function utf8_replace_at(s, i, ch)
+	local bi = utf8_byte_index(s, i)
+	local bj = utf8_byte_index(s, i + 1) - 1
+	if bi > #s then return s end
+	return s:sub(1, bi - 1) .. ch .. s:sub(bj + 1)
 end
 
 local function mk_row(ch, fg, bg, n)
@@ -110,6 +149,11 @@ local function save_full()
 	serialize_to(FULL_PATH, world)
 end
 
+-- UTF-8 safe substring by character range
+local function utf8_slice_by_chars(s, start_char, end_char)
+	return utf8_sub(s, start_char, end_char)
+end
+
 local function save_chunks()
 	local W, H = world.w, world.h
 	local rows = world.rows
@@ -125,12 +169,13 @@ local function save_chunks()
 					local src = rows[wy]
 					local x0 = cx * CHUNK_W + 1
 					local x1 = math.min(x0 + CHUNK_W - 1, W)
-					local c = src.c:sub(x0, x1)
+					local c  = utf8_slice_by_chars(src.c,  x0, x1)
 					local fg = src.fg:sub(x0, x1)
 					local bg = src.bg:sub(x0, x1)
 					-- pad to chunk width if at world edge
-					if #c < CHUNK_W then
-						local pad = CHUNK_W - #c
+					local cc = utf8_len(c)
+					if cc < CHUNK_W then
+						local pad = CHUNK_W - cc
 						c  = c  .. string.rep(" ", pad)
 						fg = fg .. string.rep("7", pad)
 						bg = bg .. string.rep("f", pad)
@@ -151,9 +196,9 @@ end
 local function set_cell(wx, wy, ch, fg, bg)
 	if wx < 1 or wy < 1 or wx > world.w or wy > world.h then return end
 	local r = world.rows[wy]
-	r.c  = replace_at(r.c, wx, ch)
-	r.fg = replace_at(r.fg, wx, fg)
-	r.bg = replace_at(r.bg, wx, bg)
+	r.c  = utf8_replace_at(r.c, wx, ch)
+	r.fg = r.fg:sub(1, wx-1) .. fg .. r.fg:sub(wx+1)
+	r.bg = r.bg:sub(1, wx-1) .. bg .. r.bg:sub(wx+1)
 end
 
 local function get_cell(wx, wy)
@@ -162,7 +207,7 @@ local function get_cell(wx, wy)
 	end
 	local r = world.rows[wy]
 	return {
-		ch = r.c:sub(wx, wx),
+		ch = utf8_sub(r.c, wx, wx),
 		fg = r.fg:sub(wx, wx),
 		bg = r.bg:sub(wx, wx)
 	}
@@ -186,14 +231,14 @@ local function apply_postprocess()
 	for y = 1, world.h do
 		local r = world.rows[y]
 		for x = 1, world.w do
-			local ch = r.c:sub(x, x)
+			local ch = utf8_sub(r.c, x, x)
 			local fg = r.fg:sub(x, x)
 			local bg = r.bg:sub(x, x)
 			for _, rule in ipairs(POST_RULES) do
 				if fg == rule.fg and bg == rule.bg and rule.glyphs[ch] then
 					local is_even = ((x + y) % 2) == 0
 					local new_ch = is_even and rule.pattern.even or rule.pattern.odd
-					r.c = replace_at(r.c, x, new_ch)
+					r.c = utf8_replace_at(r.c, x, new_ch)
 					break
 				end
 			end
@@ -221,37 +266,48 @@ local rect_anchor = nil          -- {x,y} when rectangle mode armed; nil otherwi
 local painting = false
 local last_mx, last_my = nil, nil
 
--- ---------- Rendering ----------
+-- ---------- Colors ----------
+local HEX_TO_COLOR = {
+	["0"]=colors.white,     ["1"]=colors.orange,   ["2"]=colors.magenta, ["3"]=colors.lightBlue,
+	["4"]=colors.yellow,    ["5"]=colors.lime,     ["6"]=colors.pink,    ["7"]=colors.gray,
+	["8"]=colors.lightGray, ["9"]=colors.cyan,     ["a"]=colors.purple,  ["b"]=colors.blue,
+	["c"]=colors.brown,     ["d"]=colors.green,    ["e"]=colors.red,     ["f"]=colors.black,
+}
+
+-- ---------- Rendering (UTF-8 safe, no blit) ----------
 local function draw_view()
 	term.setBackgroundColor(colors.black)
 	term.clear()
 
-	-- Draw viewport using blit
 	local vw, vh = tw, th - 1 -- leave bottom row for HUD
 	for sy = 1, vh do
 		local wy = cam_y + sy - 1
+		term.setCursorPos(1, sy)
 		if wy >= 1 and wy <= world.h then
-			local src = world.rows[wy]
-			local x0 = cam_x
-			local x1 = math.min(cam_x + vw - 1, world.w)
-			local pad = vw - (x1 - x0 + 1)
-			local c  = (x0 <= world.w) and src.c:sub(x0, x1) or ""
-			local fg = (x0 <= world.w) and src.fg:sub(x0, x1) or ""
-			local bg = (x0 <= world.w) and src.bg:sub(x0, x1) or ""
-			if pad > 0 then
-				c  = c  .. string.rep(" ", pad)
-				fg = fg .. string.rep("7", pad)
-				bg = bg .. string.rep("f", pad)
+			local row = world.rows[wy]
+			for sx = 1, vw do
+				local wx = cam_x + sx - 1
+				if wx >= 1 and wx <= world.w then
+					local ch = utf8_sub(row.c, wx, wx)
+					local fg = row.fg:sub(wx, wx)
+					local bg = row.bg:sub(wx, wx)
+					term.setTextColor(HEX_TO_COLOR[fg] or colors.white)
+					term.setBackgroundColor(HEX_TO_COLOR[bg] or colors.black)
+					term.write(ch)
+				else
+					term.setTextColor(colors.white)
+					term.setBackgroundColor(colors.black)
+					term.write(" ")
+				end
 			end
-			term.setCursorPos(1, sy)
-			term.blit(c, fg, bg)
 		else
-			term.setCursorPos(1, sy)
-			term.blit(string.rep(" ", vw), string.rep("7", vw), string.rep("f", vw))
+			term.setTextColor(colors.white)
+			term.setBackgroundColor(colors.black)
+			term.write(string.rep(" ", vw))
 		end
 	end
 
-	-- HUD (bottom row)
+	-- HUD (bottom row) - ASCII to keep width exact
 	local wx, wy = nil, nil
 	if last_mx and last_my then
 		wx, wy = cam_x + last_mx - 1, cam_y + last_my - 1
@@ -259,7 +315,7 @@ local function draw_view()
 	local pos_str = (wx and wy) and ("(%d,%d)  "):format(wx, wy) or ""
 	local info = ("%sbrush[%s,%s,%s]  cam(%d,%d)  %s"):format(
 		pos_str, brush.ch, brush.fg, brush.bg, cam_x, cam_y,
-		rect_anchor and ("RECT anchor at "..rect_anchor.x..","..rect_anchor.y.." → click to apply") or ""
+		rect_anchor and ("RECT anchor at "..rect_anchor.x..","..rect_anchor.y.." -> click to apply") or ""
 	)
 	term.setCursorPos(1, th)
 	term.setBackgroundColor(colors.gray)
@@ -287,7 +343,8 @@ end
 -- ---------- Brush I/O ----------
 local function prompt_glyph()
 	local s = read_line("Glyph (single char): ")
-	if s and #s >= 1 then brush.ch = s:sub(1,1) end
+	if s and #s >= 1 then brush.ch = s -- NOTE: may be UTF-8, we accept it
+	end
 end
 local function prompt_fg()
 	local s = read_line("FG color (0-f hex): ")
@@ -348,8 +405,7 @@ while true do
 
 		elseif code == keys_map.r then
 			if rect_anchor then rect_anchor = nil else
-				-- arm rectangle mode; next left click sets anchor if none set; second applies
-				rect_anchor = false -- "armed but no anchor yet"
+				rect_anchor = false -- armed, waiting for anchor click
 			end
 
 		elseif code == keys_map.s then
@@ -361,7 +417,6 @@ while true do
 			end
 
 		elseif code == keys_map.n then
-			-- "save current brush to slot" mode; next number assigns
 			awaiting_brush_save_slot = true
 
 		elseif code == keys_map.one   then if awaiting_brush_save_slot then save_brush_slot(1) else recall_brush_slot(1) end; awaiting_brush_save_slot=false
@@ -387,11 +442,9 @@ while true do
 		if wx and wy then
 			if button == 1 then
 				if rect_anchor == false then
-					-- first click sets anchor
-					rect_anchor = { x = wx, y = wy }
+					rect_anchor = { x = wx, y = wy } -- first click sets anchor
 				elseif rect_anchor and type(rect_anchor) == "table" then
-					-- second click applies rectangle
-					fill_rect(rect_anchor.x, rect_anchor.y, wx, wy, brush)
+					fill_rect(rect_anchor.x, rect_anchor.y, wx, wy, brush) -- second click fills
 					rect_anchor = nil
 				else
 					painting = true
@@ -411,6 +464,4 @@ while true do
 	elseif ev == "term_resize" then
 		refresh_term_size()
 	end
-
-	-- No polling of mouse; painting occurs on drag/click events.
 end
