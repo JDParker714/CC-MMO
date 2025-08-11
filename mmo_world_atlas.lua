@@ -59,6 +59,15 @@ function M.is_blocked(wx, wy)
 	return tile == "#"
 end
 
+function M.is_inside(wx, wy)
+	local cx, cy, lx, ly = w2c(wx, wy)
+	local ch = load_chunk(cx, cy)
+	if not ch or not ch.rows[ly] then return true end	-- void = blocked
+	local r = ch.rows[ly]
+	local tile = r.c:sub(lx, lx)
+	return tile == "+"
+end
+
 -- Return a viewport centered on (wx,wy) with size (vw,vh) as rows of {c,fg,bg}
 function M.get_view(wx, wy, vw, vh)
 	local half_w, half_h = math.floor(vw/2), math.floor(vh/2)

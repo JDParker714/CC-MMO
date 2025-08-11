@@ -37,6 +37,7 @@ local function now() return os.clock() end
 
 local function is_pos_free(wx, wy)
 	if world.is_blocked(wx, wy) then return false end
+	if world.is_inside(wx, wy) then return false end
 	for _, p in pairs(players) do if p.x==wx and p.y==wy then return false end end
 	for _, e in ipairs(mobs)   do if e.x==wx and e.y==wy then return false end end
 	return true
@@ -46,7 +47,7 @@ local function spawn_n_mobs_random(kind, n)
 	for i=1,n do
 		local tries = 300
 		repeat
-			local wx = math.random(25, 75)
+			local wx = math.random(50, 200)
 			local wy = math.random(25, 75)
 			if is_pos_free(wx, wy) then
 				table.insert(mobs, entities.new(kind, wx, wy))
@@ -70,9 +71,9 @@ local function spawn_npc(x, y, lines, name, visual)
 end
 
 -- Spawn Mobs
-spawn_n_mobs_random("goblin", 8)
-spawn_n_mobs_random("raider", 4)
-spawn_n_mobs_random("dragon", 2)
+spawn_n_mobs_random("goblin", 16)
+spawn_n_mobs_random("raider", 8)
+spawn_n_mobs_random("dragon", 4)
 
 local function is_occupied(wx, wy, except_id)
 	for id, p in pairs(players) do
@@ -127,23 +128,94 @@ local function find_free_spawn(pref_x, pref_y, max_radius)
 	return pref_x, pref_y
 end
 
--- Spawn Npc's
-local npc_x, npc_y = find_free_spawn(60, 40, 5)
-spawn_npc(npc_x, npc_y, {
-  "Shh. Watch for goblins by the gate.",
-  "They love shiny coins. And ankles."
-}, "Guard", { glyph = "N", fg = "0", bg = "3" })
+--42 Char Max a line
 
-npc_x, npc_y = find_free_spawn(40, 60, 5)
+-- Spawn Npc's
+local npc_x, npc_y = find_free_spawn(130, 49, 5)
 spawn_npc(npc_x, npc_y, {
-  "Have you seen my wife around?.",
+  "Welcome adventurer, to the town of Firstia",
+  "I am the Noble of these lands",
+  "Please don't piss in the water supply",
+  "We've had alot of people doing that lately",
+  "Besides that, good luck and safe travels!"
+}, "Lady Firstia", { glyph = "N", fg = "0", bg = "2" })
+
+npc_x, npc_y = find_free_spawn(108, 45, 5)
+spawn_npc(npc_x, npc_y, {
+  "Ayyyyyy I'm J-O-R-K-I-N over here",
+  "Or to be specific, Grand Magus Jorkin",
+  "... over here",
+  "I am the strongest wizard in Firstia",
+  "I can teach you the secrets of magic",
+  "As long as the secrets are cantrip level"
+}, "Grand Magus Jorkin", { glyph = "N", fg = "0", bg = "b" })
+
+npc_x, npc_y = find_free_spawn(97, 31, 5)
+spawn_npc(npc_x, npc_y, {
+  "Grab an ale and groop some soup you sloot",
+  "Welcome the Karp Tavern!",
+  "Today's soup is Griffin Noodle"
+}, "Ms Tankard", { glyph = "N", fg = "0", bg = "4" })
+
+npc_x, npc_y = find_free_spawn(91, 39, 5)
+spawn_npc(npc_x, npc_y, {
+  "Hey there fuckaroo my tits are down here",
+  "I didn't put on this corset that squeezes",
+  "My organs into a meatball for nothing",
+  "But my cleavage do be boombastic tho",
+  "So make sure to leave a good tip"
+}, "Froth the Busty Lass", { glyph = "N", fg = "0", bg = "a" })
+
+npc_x, npc_y = find_free_spawn(133, 24, 5)
+spawn_npc(npc_x, npc_y, {
+  "P r a i s e  Beeeee Hallelujah",
+  "Drink a shot of fireball my child",
+  "And smoke a pack of these menthol cigs",
+  "As is his will.  Glory be to the hellz"
+}, "High Priestess Natas", { glyph = "N", fg = "0", bg = "e" })
+
+npc_x, npc_y = find_free_spawn(136, 40, 5)
+spawn_npc(npc_x, npc_y, {
+  "Oh god the spiders want my sperm cells",
+  "Sorry I've been huffing soldering fumes",
+  "I'm the town smith! I can craft,",
+  "Any gear you can think of, as long as",
+  "You bounce on it crazy style ;)"
+}, "Alex the Smithy", { glyph = "N", fg = "0", bg = "1" })
+
+npc_x, npc_y = find_free_spawn(142, 51, 5)
+spawn_npc(npc_x, npc_y, {
+  "Mess with Sir Buckle get the FUCKLE!!",
+  "To be fair, I don't know what that is",
+  "But I DO KNOW about Law and Order!",
+  "Try not to break any laws adventurer"
+}, "Sir Buckle", { glyph = "N", fg = "0", bg = "8" })
+
+npc_x, npc_y = find_free_spawn(147, 41, 5)
+spawn_npc(npc_x, npc_y, {
+  "Ahhh! Don't shoot!!! I'm innocent!!",
+  "Oh wait... You're not a town guard.",
+  "I'm defitenly not innocent >:)",
+  "That orphanage had it 2 good for 2 long",
+  "If you need anything illegal done..",
+  "Hit me up, maybe we make a deal."
+}, "Looty McSticky-Fingers", { glyph = "N", fg = "0", bg = "7" })
+
+npc_x, npc_y = find_free_spawn(157, 64, 5)
+spawn_npc(npc_x, npc_y, {
+  "Have you seen my wife around?",
   "I brought her some sheet metal to eat!",
   "Nothing bad happens to the Kennedy's!"
-}, "JFK", { glyph = "N", fg = "0", bg = "3" })
+}, "JFK", { glyph = "N", fg = "0", bg = "b" })
+
+npc_x, npc_y = find_free_spawn(171, 62, 5)
+spawn_npc(npc_x, npc_y, {
+  "Mooooooooo."
+}, "Cow", { glyph = "N", fg = "0", bg = "f" })
 
 local function spawn_if_needed(id)
 	if not players[id] then
-		local sx, sy = find_free_spawn(50, 50)
+		local sx, sy = find_free_spawn(125, 50)
 		players[id] = {
 			x = sx, y = sy,
 			last_dx = 0, last_dy = 0,
