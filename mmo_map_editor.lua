@@ -36,7 +36,7 @@ local POST_RULES = {
 	{
 		fg = "5",
 		bg = "d",
-		glyphs = { ["g"]=true, ["."]=true, ["v"]=true },
+		glyphs = { ["g"]=true, ["*"]=true, ["."]=true, ["v"]=true },
 		pattern = { even = ".", odd = "v" }, 
 	},
 	{
@@ -200,11 +200,12 @@ local function apply_postprocess()
 					r.c = replace_at(r.c, x, "*")
 					r.fg = replace_at(r.fg, x, rand_fg)
 				else
-					local is_even = ((x + y) % 2) == 0
-					local new_ch = is_even and "." or "v"
-					r.c = replace_at(r.c, x, new_ch)
+					r.c = replace_at(r.c, x, "g")
 					r.fg = replace_at(r.fg, x, "5")
 				end
+
+				ch = r.c:sub(x, x)
+				fg = r.fg:sub(x, x)
 			end
 			
 			for _, rule in ipairs(POST_RULES) do
