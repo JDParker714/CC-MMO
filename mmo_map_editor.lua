@@ -36,7 +36,7 @@ local POST_RULES = {
 	{
 		fg = "5",
 		bg = "d",
-		glyphs = { ["g"]=true, ["."]=true, ["v"]=true },
+		glyphs = { ["g"]=true, ["*"]=true, ["."]=true, ["v"]=true },
 		pattern = { even = ".", odd = "v" }, 
 	},
     {
@@ -203,7 +203,7 @@ local function apply_postprocess()
 
             -- Add random flowers on * tiles
 			if bg == "d" and (ch == "." or ch == "g" or ch == "v" or ch == "*") then
-				if math.random() < 0.08 then -- 15% chance per tile
+				if math.random() < 0.04 then
 					local colors = { "1", "3", "6", "3", "e" }
 					local rand_fg = colors[math.random(#colors)]
                     r.c = replace_at(r.c, x, "*")
