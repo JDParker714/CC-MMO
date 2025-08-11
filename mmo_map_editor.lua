@@ -36,7 +36,7 @@ local POST_RULES = {
 	{
 		fg = "5",
 		bg = "d",
-		glyphs = { ["g"]=true, ["*"]=true, ["."]=true, ["v"]=true },
+		glyphs = { ["g"]=true, ["."]=true, ["v"]=true },
 		pattern = { even = ".", odd = "v" }, 
 	},
 	{
