@@ -238,13 +238,13 @@ spawn_npc(npc_x, npc_y, {
   "..... a Clock-topus"
 }, "Iron Magikarp", { glyph = "N", fg = "0", bg = "8" })
 
-npc_x, npc_y = find_free_spawn(206, 92, 5)
+npc_x, npc_y = find_free_spawn(204, 91, 5)
 spawn_npc(npc_x, npc_y, {
   "We grow a lot of fruit here at MangoBay",
   "Coconuts, Mangos, Pineapples, n stuff",
   "We also have some... other crops ;)",
   "If you're cool you can buy some",
-  "We got weed, ketamine, klonopin, acid",
+  "We got weed, ketamine, klonopin, & acid",
   "Oh shit, its the boat police! Act cool"
 }, "Sapphire Magikarp", { glyph = "N", fg = "0", bg = "3" })
 
@@ -253,7 +253,6 @@ spawn_npc(npc_x, npc_y, {
   "Eeeeeeeeeeee my brother sent me",
   "To get water from this well",
   "But told me I can only carry it",
-  "If you're cool you can buy some",
   "with my hands... EEEEEEEEEEEEE",
   "I've been here 3 days ;-;"
 }, "Copper Magikarp", { glyph = "N", fg = "0", bg = "1" })
@@ -266,9 +265,48 @@ spawn_npc(npc_x, npc_y, {
   "sanctuary of eep. Where I train, in the",
   "mystic arts of cool rocks, eep, and",
   "crafting memes so Gold will msg me back!",
-  "Take breath and recover, but beware",
+  "Take a breath and recover, but beware",
   "ALL THE ROCKS ON THIS MOUNTAIN ARE MINE!"
-}, "Ashe the Eeper of Worlds", { glyph = "N", fg = "0", bg = "1" })
+}, "Ashe the Eeper of Worlds", { glyph = "N", fg = "0", bg = "a" })
+
+-- Hive
+npc_x, npc_y = find_free_spawn(15, 28, 5)
+spawn_npc(npc_x, npc_y, {
+  "... it didn't have to end this way",
+  "We could have been bees",
+  "This should have been good news",
+  "We tried to live like a pet. A pet...",
+  "But then the villager's started wanting",
+  "Food.. Not just honey and violence",
+  "We couldn't produce enough to feed them",
+  "So I had to make a difficult decision...",
+  "To burn it all down & unfound this place",
+  "Bee gods forgive me for my crimes...",
+  "Welp! Time for the fortress style!"
+}, "Andy the Unfounder", { glyph = "N", fg = "0", bg = "e" })
+
+npc_x, npc_y = find_free_spawn(52, 24, 5)
+spawn_npc(npc_x, npc_y, {
+  "Welcome traveler! To the Hive!!",
+  "Oh wait, I guess I can't say that anymore",
+  "The whole city was destroyed by our leader",
+  "And now we must go find new homes..."
+}, "Bee-atrice", { glyph = "N", fg = "0", bg = "1" })
+
+npc_x, npc_y = find_free_spawn(27, 60, 5)
+spawn_npc(npc_x, npc_y, {
+  "Where will I go? What will I do?",
+  "He took it all, my job, my home, my kids",
+  "My life is empty now & the colony is gone",
+  "This is a catastro-bee"
+}, "Dr Bumble", { glyph = "N", fg = "0", bg = "1" })
+
+npc_x, npc_y = find_free_spawn(29, 46, 5)
+spawn_npc(npc_x, npc_y, {
+  "Our leader didn't take that guy's kids",
+  "I did >:)",
+  "Got any baby oil on you?"
+}, "Bee Diddy", { glyph = "N", fg = "0", bg = "1" })
 
 local function spawn_if_needed(id)
 	if not players[id] then
