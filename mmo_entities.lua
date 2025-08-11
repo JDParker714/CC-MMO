@@ -102,7 +102,7 @@ M.register("goblin", {
 
 -- Raider: prefers horizontal wandering
 M.register("raider", {
-	glyph = "^", fg = "f", bg = "9", cd_max = 2,
+	glyph = "R", fg = "f", bg = "9", cd_max = 2,
 	think = function(self, players, entities)
 		local r = math.random(6)
 		if r <= 2 then return 0, (r==1) and -1 or 1

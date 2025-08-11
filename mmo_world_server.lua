@@ -72,7 +72,7 @@ end
 
 -- Spawn Mobs
 spawn_n_mobs_random("goblin", 16)
-spawn_n_mobs_random("raider", 8)
+spawn_n_mobs_random("raider", 12)
 spawn_n_mobs_random("dragon", 4)
 
 local function is_occupied(wx, wy, except_id)
@@ -322,7 +322,7 @@ spawn_npc(npc_x, npc_y, {
   "When I was a kid I yearned for the mines",
   "And now that I'm in the mines, I yearn",
   "For quartz.  That yummy yummy quartz",
-  "I've been mining quartz & shitting gravel",
+  "I've been eating quartz & shitting gravel",
   "For over 20 years"
 }, "Cory Quartz-Eater", { glyph = "N", fg = "0", bg = "a" })
 
