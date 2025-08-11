@@ -131,7 +131,7 @@ end
 --42 Char Max a line
 
 -- Spawn Npc's
-local npc_x, npc_y = find_free_spawn(130, 49, 5)
+local npc_x, npc_y = find_free_spawn(130, 51, 5)
 spawn_npc(npc_x, npc_y, {
   "Welcome adventurer, to the town of Firstia",
   "I am the Noble of these lands",
@@ -166,7 +166,7 @@ spawn_npc(npc_x, npc_y, {
   "So make sure to leave a good tip"
 }, "Froth the Busty Lass", { glyph = "N", fg = "0", bg = "a" })
 
-npc_x, npc_y = find_free_spawn(133, 24, 5)
+npc_x, npc_y = find_free_spawn(132, 26, 5)
 spawn_npc(npc_x, npc_y, {
   "P r a i s e  Beeeee Hallelujah",
   "Drink a shot of fireball my child",
