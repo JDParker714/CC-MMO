@@ -191,15 +191,6 @@ local function apply_postprocess()
 			local ch = r.c:sub(x, x)
 			local fg = r.fg:sub(x, x)
 			local bg = r.bg:sub(x, x)
-			for _, rule in ipairs(POST_RULES) do
-				if fg == rule.fg and bg == rule.bg and rule.glyphs[ch] then
-					local is_even = ((x + y) % 2) == 0
-					local new_ch = is_even and rule.pattern.even or rule.pattern.odd
-					r.c = replace_at(r.c, x, new_ch)
-                    ch = new_ch
-					break
-				end
-			end
 
             -- Add random flowers on * tiles
 			if bg == "d" and (ch == "." or ch == "g" or ch == "v" or ch == "*") then
@@ -209,8 +200,18 @@ local function apply_postprocess()
                     r.c = replace_at(r.c, x, "*")
 					r.fg = replace_at(r.fg, x, rand_fg)
                 else
-                    r.c = replace_at(r.c, x, ch)
+                    r.c = replace_at(r.c, x, "g")
 					r.fg = replace_at(r.fg, x, "5")
+				end
+			end
+            
+			for _, rule in ipairs(POST_RULES) do
+				if fg == rule.fg and bg == rule.bg and rule.glyphs[ch] then
+					local is_even = ((x + y) % 2) == 0
+					local new_ch = is_even and rule.pattern.even or rule.pattern.odd
+					r.c = replace_at(r.c, x, new_ch)
+                    ch = new_ch
+					break
 				end
 			end
 		end
