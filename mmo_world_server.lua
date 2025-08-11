@@ -91,7 +91,7 @@ end
 
 local function find_free_spawn(pref_x, pref_y, max_radius)
 	pref_x = pref_x or 5
-	pref_y = pref_y or 5
+	pref_y = (pref_y-1) or 5
 	max_radius = max_radius or 20
 
 	-- Try the preferred spot first
