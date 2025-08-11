@@ -140,7 +140,7 @@ spawn_npc(npc_x, npc_y, {
   "Besides that, good luck and safe travels!"
 }, "Lady Firstia", { glyph = "N", fg = "0", bg = "2" })
 
-npc_x, npc_y = find_free_spawn(108, 45, 5)
+npc_x, npc_y = find_free_spawn(107, 47, 5)
 spawn_npc(npc_x, npc_y, {
   "Ayyyyyy I'm J-O-R-K-I-N over here",
   "Or to be specific, Grand Magus Jorkin",
@@ -150,7 +150,7 @@ spawn_npc(npc_x, npc_y, {
   "As long as the secrets are cantrip level"
 }, "Grand Magus Jorkin", { glyph = "N", fg = "0", bg = "b" })
 
-npc_x, npc_y = find_free_spawn(97, 31, 5)
+npc_x, npc_y = find_free_spawn(92, 30, 5)
 spawn_npc(npc_x, npc_y, {
   "Grab an ale and groop some soup you sloot",
   "Welcome the Karp Tavern!",

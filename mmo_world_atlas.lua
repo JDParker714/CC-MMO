@@ -56,7 +56,8 @@ function M.is_blocked(wx, wy)
 	if not ch or not ch.rows[ly] then return true end	-- void = blocked
 	local r = ch.rows[ly]
 	local tile = r.c:sub(lx, lx)
-	return tile == "#"
+	local color = r.bg:sub(lx, lx)
+	return tile == "#" or color == "b"
 end
 
 function M.is_inside(wx, wy)

@@ -45,6 +45,12 @@ local POST_RULES = {
 		glyphs = { ["s"]=true, ["."]=true, ["~"]=true },
 		pattern = { even = ".", odd = "~" }, 
 	},
+	{
+		fg = "3",
+		bg = "b",
+		glyphs = { ["#"]=true, [" "]=true, ["~"]=true },
+		pattern = { even = " ", odd = "~" }, 
+	},
 }
 
 -- ---------- Utils ----------
