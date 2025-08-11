@@ -47,8 +47,8 @@ local function spawn_n_mobs_random(kind, n)
 	for i=1,n do
 		local tries = 300
 		repeat
-			local wx = math.random(50, 200)
-			local wy = math.random(25, 75)
+			local wx = math.random(10, 240)
+			local wy = math.random(10, 90)
 			if is_pos_free(wx, wy) then
 				table.insert(mobs, entities.new(kind, wx, wy))
 				break
@@ -307,6 +307,24 @@ spawn_npc(npc_x, npc_y, {
   "I did >:)",
   "Got any baby oil on you?"
 }, "Bee Diddy", { glyph = "N", fg = "0", bg = "1" })
+
+--Castle
+npc_x, npc_y = find_free_spawn(95, 9, 5)
+spawn_npc(npc_x, npc_y, {
+  "Welcome Adventurer! To my castle",
+  "I am Devin, the King... of... ",
+  "CHESTICUFFS!!! Challenge me, if you dare"
+}, "King Devin", { glyph = "N", fg = "0", bg = "f" })
+
+--Mines
+npc_x, npc_y = find_free_spawn(40, 93, 5)
+spawn_npc(npc_x, npc_y, {
+  "When I was a kid I yearned for the mines",
+  "And now that I'm in the mines, I yearn",
+  "For quartz.  That yummy yummy quartz",
+  "I've been mining quartz & shitting gravel",
+  "For over 20 years"
+}, "Cory Quartz-Eater", { glyph = "N", fg = "0", bg = "a" })
 
 local function spawn_if_needed(id)
 	if not players[id] then
