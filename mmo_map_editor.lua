@@ -196,17 +196,21 @@ local function apply_postprocess()
 					local is_even = ((x + y) % 2) == 0
 					local new_ch = is_even and rule.pattern.even or rule.pattern.odd
 					r.c = replace_at(r.c, x, new_ch)
+                    ch = new_ch
 					break
 				end
 			end
 
             -- Add random flowers on * tiles
 			if bg == "d" and (ch == "." or ch == "g" or ch == "v" or ch == "*") then
-				if math.random() < 0.15 then -- 15% chance per tile
+				if math.random() < 0.08 then -- 15% chance per tile
 					local colors = { "1", "3", "6", "3", "e" }
 					local rand_fg = colors[math.random(#colors)]
                     r.c = replace_at(r.c, x, "*")
 					r.fg = replace_at(r.fg, x, rand_fg)
+                else
+                    r.c = replace_at(r.c, x, ch)
+					r.fg = replace_at(r.fg, x, "5")
 				end
 			end
 		end
