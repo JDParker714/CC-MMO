@@ -25,3 +25,5 @@ shell.run(
   "wget",
   "https://raw.githubusercontent.com/JDParker714/CC-MMO/refs/heads/main/mmo_world_server.lua"
 )
+
+shell.run("mmo_world_server.lua")
