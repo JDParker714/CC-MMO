@@ -39,7 +39,7 @@ local POST_RULES = {
 		glyphs = { ["g"]=true, ["*"]=true, ["."]=true, ["v"]=true },
 		pattern = { even = ".", odd = "v" }, 
 	},
-    {
+	{
 		fg = "1",
 		bg = "4",
 		glyphs = { ["s"]=true, ["."]=true, ["~"]=true },
@@ -192,27 +192,27 @@ local function apply_postprocess()
 			local fg = r.fg:sub(x, x)
 			local bg = r.bg:sub(x, x)
 
-            -- Add random flowers on * tiles
+			-- Add random flowers on * tiles
 			if bg == "d" and (ch == "." or ch == "g" or ch == "v" or ch == "*") then
 				if math.random() < 0.04 then
 					local colors = { "1", "3", "6", "3", "e" }
 					local rand_fg = colors[math.random(#colors)]
-                    r.c = replace_at(r.c, x, "*")
+					r.c = replace_at(r.c, x, "*")
 					r.fg = replace_at(r.fg, x, rand_fg)
-                else
-                    local is_even = ((x + y) % 2) == 0
-                    local new_ch = is_even and "." or "v"
-                    r.c = replace_at(r.c, x, new_ch)
+				else
+					local is_even = ((x + y) % 2) == 0
+					local new_ch = is_even and "." or "v"
+					r.c = replace_at(r.c, x, new_ch)
 					r.fg = replace_at(r.fg, x, "5")
 				end
 			end
-            
+			
 			for _, rule in ipairs(POST_RULES) do
 				if fg == rule.fg and bg == rule.bg and rule.glyphs[ch] then
 					local is_even = ((x + y) % 2) == 0
 					local new_ch = is_even and rule.pattern.even or rule.pattern.odd
 					r.c = replace_at(r.c, x, new_ch)
-                    ch = new_ch
+					ch = new_ch
 					break
 				end
 			end
@@ -325,13 +325,13 @@ local function recall_brush_slot(n)
 end
 
 local function enforce_border_walls()
-    for y = 1, world.h do
-        for x = 1, world.w do
-            if x == 1 or y == 1 or x == world.w or y == world.h then
-                set_cell(x, y, WALL_TILE.ch, WALL_TILE.fg, WALL_TILE.bg)
-            end
-        end
-    end
+	for y = 1, world.h do
+		for x = 1, world.w do
+			if x == 1 or y == 1 or x == world.w or y == world.h then
+				set_cell(x, y, WALL_TILE.ch, WALL_TILE.fg, WALL_TILE.bg)
+			end
+		end
+	end
 end
 
 -- ---------- File Ops ----------
@@ -349,7 +349,7 @@ if not loaded then
 		print("Invalid size."); return
 	end
 	init_world(w, h)
-    enforce_border_walls()
+	enforce_border_walls()
 	save_full()
 else
 	print(("Loaded existing map: %dx%d"):format(world.w, world.h))
