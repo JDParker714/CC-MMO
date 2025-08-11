@@ -131,6 +131,8 @@ end
 --42 Char Max a line
 
 -- Spawn Npc's
+
+-- Firstia
 local npc_x, npc_y = find_free_spawn(130, 51, 5)
 spawn_npc(npc_x, npc_y, {
   "Welcome adventurer, to the town of Firstia",
@@ -212,6 +214,61 @@ npc_x, npc_y = find_free_spawn(171, 62, 5)
 spawn_npc(npc_x, npc_y, {
   "Mooooooooo."
 }, "Cow", { glyph = "N", fg = "0", bg = "f" })
+
+-- MangoBay
+npc_x, npc_y = find_free_spawn(232, 76, 5)
+spawn_npc(npc_x, npc_y, {
+  "Welcome to MangoBay! Grab a Pina Colada,",
+  "and take it easy for a while!",
+  "Wait... you've heard of me??",
+  "Don't worry I haven't done capitalism",
+  "in a while.  I'm on vacation!!",
+  "I'm actually working on an MMO,",
+  "WITHIN THIS MMO! INCEPTION FUCKERS!!!"
+}, "Gold Magikarp", { glyph = "N", fg = "0", bg = "4" })
+
+npc_x, npc_y = find_free_spawn(237, 94, 5)
+spawn_npc(npc_x, npc_y, {
+  "Great day for fishing, ain't it?",
+  "Let minnow what you think of my jokes",
+  "Aren't you kraken up?",
+  "No?? You gotta be squidding me",
+  "Well don't be crabby, try this one",
+  "What has 8 arms and tells time?",
+  "..... a Clock-topus"
+}, "Iron Magikarp", { glyph = "N", fg = "0", bg = "8" })
+
+npc_x, npc_y = find_free_spawn(206, 92, 5)
+spawn_npc(npc_x, npc_y, {
+  "We grow a lot of fruit here at MangoBay",
+  "Coconuts, Mangos, Pineapples, n stuff",
+  "We also have some... other crops ;)",
+  "If you're cool you can buy some",
+  "We got weed, ketamine, klonopin, acid",
+  "Oh shit, its the boat police! Act cool"
+}, "Sapphire Magikarp", { glyph = "N", fg = "0", bg = "3" })
+
+npc_x, npc_y = find_free_spawn(241, 39, 5)
+spawn_npc(npc_x, npc_y, {
+  "Eeeeeeeeeeee my brother sent me",
+  "To get water from this well",
+  "But told me I can only carry it",
+  "If you're cool you can buy some",
+  "with my hands... EEEEEEEEEEEEE",
+  "I've been here 3 days ;-;"
+}, "Copper Magikarp", { glyph = "N", fg = "0", bg = "1" })
+
+-- Mountain
+npc_x, npc_y = find_free_spawn(235, 4, 5)
+spawn_npc(npc_x, npc_y, {
+  "Well met adventurer, you've managed to",
+  "climb my great mountain. My secret",
+  "sanctuary of eep. Where I train, in the",
+  "mystic arts of cool rocks, eep, and",
+  "crafting memes so Gold will msg me back!",
+  "Take breath and recover, but beware",
+  "ALL THE ROCKS ON THIS MOUNTAIN ARE MINE!"
+}, "Ashe the Eeper of Worlds", { glyph = "N", fg = "0", bg = "1" })
 
 local function spawn_if_needed(id)
 	if not players[id] then
