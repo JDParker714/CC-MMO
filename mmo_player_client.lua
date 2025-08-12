@@ -226,6 +226,12 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	stats.mp     = handshake.player.mp
 	stats.mp_max = handshake.player.mp_max
 
+	-- profile from server (handshake.profile); if nil, fallback
+	local profile = handshake.profile or {
+		name = player_name, glyph="@",
+		fg="f", bg="b", origin="Human", class="Fighter"
+	}
+
 	local in_dialogue = false
 
 	-- ========== UI Functions ==========
@@ -284,9 +290,18 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 		local spacerStr = "  "
 
 		local totalW = #spacerStr + #lvStr + #spacerStr + #hpStr + #spacerStr + #mpStr
-		
+
+		local className = (profile and profile.class) or nil
+		local classStr = className and (" - ".. className) or ""
+
 		local nameMax = w - totalW
-		local nameTxt = fit_text(player_name, nameMax)
+
+		local allowName = nameMax - #classStr
+		if allowName < 0 then allowName = 0 end
+		local shownName = (player_name or "Player"):sub(1, allowName)
+		local leftTxt = shownName .. classStr
+
+		local nameTxt = fit_text(leftTxt, nameMax)
 		local remainingSpace = nameMax - #nameTxt
 		
 		term.setCursorPos(1, y1)
@@ -307,12 +322,6 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
 		term.blit(mpStr, string.rep("b", #mpStr), string.rep("f", #mpStr))
 	end
-
-	-- profile from server (handshake.profile); if nil, fallback
-	local profile = handshake.profile or {
-		name = player_name, glyph="@",
-		fg="f", bg="b", origin="Human", class="Fighter"
-	}
 
 	-- Offer choice: use existing or customize
 	local newProfile = customizer_ui(profile, player_name)  -- nil means "Use Existing"
