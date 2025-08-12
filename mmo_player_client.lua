@@ -127,14 +127,15 @@ local function customizer_ui(profile)
 
 	local function redraw()
 		term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
-		term.setCursorPos(cx-10, 3); write("Character Setup")
+		term.setCursorPos(cx-10, 2); write("Character Setup")
+		term.setCursorPos(cx-math.floor(#profile.name/2), 3); write(profile.name)
 
 		local row = 6
 		local function rowCtrl(label, val)
-			term.setCursorPos(cx-16, row); write(label..": ")
-			buttons[#buttons+1] = draw_button(cx-3, row, "<", 3)
-			term.setCursorPos(cx+1, row); write(val)
-			buttons[#buttons+1] = draw_button(cx+11, row, ">", 3)
+			term.setCursorPos(cx-18, row); write(label..": ")
+			buttons[#buttons+1] = draw_button(cx-5, row, "<", 3)
+			term.setCursorPos(cx-1, row); write(val)
+			buttons[#buttons+1] = draw_button(cx+17, row, ">", 3)
 			row = row + 2
 		end
 
@@ -145,8 +146,8 @@ local function customizer_ui(profile)
 		rowCtrl("Class",  CLASSES[sel.class_i])
 
 		-- Preview box
-		term.setCursorPos(cx-16, row); write("Preview:")
-		local pvx, pvy = cx-6, row
+		term.setCursorPos(cx-18, row); write("Preview:")
+		local pvx, pvy = cx-1, row
 		term.setCursorPos(pvx, pvy+1)
 		term.blit(GLYPHS[sel.glyph_i], COLORS[sel.fg_i], COLORS[sel.bg_i])
 
