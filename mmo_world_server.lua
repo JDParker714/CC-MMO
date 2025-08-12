@@ -605,8 +605,10 @@ while true do
 					save_profile(msg.player_id, p.profile)
 				end
 			elseif t == "set_profile" and msg.player_id and type(msg.profile)=="table" then
+				print("Set Profile")
 				local p = players[msg.player_id]
 				if p then
+					print(msg.player_id)
 					-- sanitize a bit
 					local pr = msg.profile
 					pr.name   = tostring(pr.name or p.name or "Player"):sub(1,16)
@@ -620,6 +622,7 @@ while true do
 					p.profile = pr
 					p.name    = pr.name
 					save_profile(msg.player_id, pr)
+					print("Saving Profile")
 
 					-- optional ack
 					local cid = sessions[msg.player_id]

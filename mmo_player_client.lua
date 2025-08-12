@@ -129,9 +129,9 @@ local function customizer_ui(profile, auth_name)
 	local function redraw()
 		term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
 		term.setCursorPos(cx-8, 2); write("Character  Setup")
-		term.setTextColor(colors.lightBlue);
+		term.setTextColor(colors.lightBlue)
 		term.setCursorPos(cx-math.floor(#auth_name/2), 3); write(auth_name)
-		term.setTextColor(colors.white);
+		term.setTextColor(colors.white)
 
 		local row = 6
 		local function rowCtrl(label, val)
@@ -162,9 +162,10 @@ local function customizer_ui(profile, auth_name)
 		local save_x = start + use_w + gap
 		local button_y = h - 1
 		
-		term.setTextColor(colors.lightGray);
+		term.setTextColor(colors.lightGray)
 		local useBtn  = draw_button(use_x,  button_y, "Use Existing (Skip)", use_w)
 		local saveBtn = draw_button(save_x,  button_y, "Save & Play",        save_w)
+		term.setTextColor(colors.white);
 		return useBtn, saveBtn
 	end
 
