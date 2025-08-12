@@ -34,6 +34,33 @@ local players = {}
 
 local function now() return os.clock() end
 
+-- ===== Player Profiles =====
+local PLAYER_DIR = "players"
+if not fs.exists(PLAYER_DIR) then fs.makeDir(PLAYER_DIR) end
+
+local function profile_path(id) return fs.combine(PLAYER_DIR, id..".tbl") end
+
+local function load_profile(id)
+	local p = profile_path(id)
+	if not fs.exists(p) then return nil end
+	local f = fs.open(p, "r"); local t = textutils.unserialize(f.readAll()); f.close()
+	return t
+end
+
+local function save_profile(id, prof)
+	local f = fs.open(profile_path(id), "w"); f.write(textutils.serialize(prof)); f.close()
+end
+
+local function default_profile(name)
+	return {
+		name   = name or "Player",
+		glyph  = "@",
+		fg     = "f",
+		bg     = "b",
+		origin = "Human",
+		class  = "Adventurer"
+	}
+end
 
 local function is_pos_free(wx, wy)
 	if world.is_blocked(wx, wy) then return false end
@@ -329,7 +356,12 @@ spawn_npc(npc_x, npc_y, {
 local function spawn_if_needed(id)
 	if not players[id] then
 		local sx, sy = find_free_spawn(125, 50)
+		local prof = load_profile(id) or default_profile(players[id].name)
 		players[id] = {
+			--Profile
+			name = prof.name,
+			profile = prof,
+			-- Player movement
 			x = sx, y = sy,
 			last_dx = 0, last_dy = 0,
 			last_seen = now(),
@@ -373,6 +405,12 @@ local function stamp(rows, sx, sy, ch, fg, bg)
 	r.bg = r.bg:sub(1, sx-1) .. bg .. r.bg:sub(sx+1)
 end
 
+local function stamp_text(rows, sx, sy, text, fg, bg)
+	for i = 1, #text do
+		stamp(rows, sx + i - 1, sy, text:sub(i,i), fg, bg)
+	end
+end
+
 -- Draw all visible players onto the rows (centered at p.x,p.y)
 local function overlay_players(rows, me_id, center_x, center_y)
 	local x0 = center_x - HALF_W
@@ -383,12 +421,28 @@ local function overlay_players(rows, me_id, center_x, center_y)
 			local sx = (op.x - x0) + 1
 			local sy = (op.y - y0) + 1
 			if sx >= 1 and sx <= VIEW_W and sy >= 1 and sy <= VIEW_H then
-				stamp(rows, sx, sy, "&", "f", "e")
+				local glyph = (op.profile and op.profile.glyph) or "&"
+				local fg    = (op.profile and op.profile.fg)    or "f"
+				local bg    = (op.profile and op.profile.bg)    or "e"
+				stamp(rows, sx, sy, glyph, fg, bg)
+
+				-- 3-char name tag (others only), one row above if visible
+				if sy > 1 then
+					local tag = ((op.name or "EVL"):upper()):sub(1,3)
+					local tagStart = math.max(1, math.min(VIEW_W-2, sx - 1)) -- try center on head
+					stamp_text(rows, tagStart, sy - 2, tag, "0", rows[math.max(1, sy-2)].bg:sub(tagStart, tagStart))
+					-- ^ fg "0" (black); we keep existing bg tiles behind it
+				end
 			end
 		end
 	end
+	
 	-- draw ME last at center so I’s on top
-	stamp(rows, HALF_W+1, HALF_H+1, "@", "f", "b")
+	local me = players[me_id]
+	local g  = (me and me.profile and me.profile.glyph) or "@"
+	local fg = (me and me.profile and me.profile.fg)    or "f"
+	local bg = (me and me.profile and me.profile.bg)    or "b"
+	stamp(rows, HALF_W+1, HALF_H+1, g, fg, bg)
 end
 
 local function overlay_entities(rows, center_x, center_y)
@@ -513,7 +567,8 @@ while true do
 						mp = p.mp, mp_max = p.mp_max
 					},
 					rows = rows,
-					view_w = VIEW_W, view_h = VIEW_H
+					view_w = VIEW_W, view_h = VIEW_H,
+					profile = p.profile
 				}), PROTO_MMO)
 
 			elseif t == "input_state" and msg.player_id then
@@ -541,6 +596,35 @@ while true do
 				players[msg.player_id] = nil
 				sessions[msg.player_id] = nil
 				rednet.send(sender, textutils.serialize({type="bye"}), PROTO_MMO)
+			elseif t == "introduce" and msg.player_id and msg.name then
+				spawn_if_needed(msg.player_id); touch(msg.player_id)
+				local p = players[msg.player_id]
+				p.name = msg.name
+				if not p.profile then
+					p.profile = default_profile(msg.name)
+					save_profile(msg.player_id, p.profile)
+				end
+			elseif t == "set_profile" and msg.player_id and type(msg.profile)=="table" then
+				local p = players[msg.player_id]
+				if p then
+					-- sanitize a bit
+					local pr = msg.profile
+					pr.name   = tostring(pr.name or p.name or "Player"):sub(1,16)
+					pr.glyph  = tostring(pr.glyph or "@"):sub(1,1)
+					local function oneHex(s) return (tostring(s or "f"):match("^[0-9a-f]$") and s) or "f" end
+					pr.fg     = oneHex(pr.fg)
+					pr.bg     = oneHex(pr.bg)
+					pr.origin = tostring(pr.origin or "Human"):sub(1,16)
+					pr.class  = tostring(pr.class or "Fighter"):sub(1,16)
+
+					p.profile = pr
+					p.name    = pr.name
+					save_profile(msg.player_id, pr)
+
+					-- optional ack
+					local cid = sessions[msg.player_id]
+					if cid then rednet.send(cid, textutils.serialize({type="set_profile_ok"}), PROTO_MMO) end
+				end
 			end
 		end
 

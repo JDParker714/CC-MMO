@@ -83,6 +83,121 @@ local function ws_handshake(player_id)
 	return resp
 end
 
+-- ========== Player Character Creator ==========
+local function cycle(tbl, idx, dir)
+	idx = idx + dir
+	if idx < 1 then idx = #tbl end
+	if idx > #tbl then idx = 1 end
+	return idx
+end
+
+local COLORS = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e"}
+local GLYPHS = {"@", "&", "P", "G", "A", "N", "D", "w"}
+local ORIGINS= {"Human","Elf","Dwarf","Orc","Tiefling"}
+local CLASSES= {"Fighter","Wizard","Rogue","Cleric","Ranger"}
+
+local function draw_button(x,y,label,w)
+	w = w or (#label+2)
+	term.setCursorPos(x,y); write("["..label.."]"..string.rep(" ", math.max(0, w-#label-2)))
+	return {x=x, y=y, w=w, h=1}
+end
+
+local function hit(btn, mx,my)
+	return mx>=btn.x and mx<=(btn.x+btn.w-1) and my>=btn.y and my<=(btn.y+btn.h-1)
+end
+
+local function customizer_ui(profile)
+	term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
+	local w,h = term.getSize()
+	local cx = math.floor(w/2)
+
+	local sel = {
+		glyph_i  = 1, fg_i = 1, bg_i = 1,
+		origin_i = 1, class_i = 1
+	}
+
+	-- seed from incoming profile
+	for i,g in ipairs(GLYPHS) do if g==profile.glyph then sel.glyph_i=i end end
+	for i,c in ipairs(COLORS) do if c==profile.fg    then sel.fg_i=i end end
+	for i,c in ipairs(COLORS) do if c==profile.bg    then sel.bg_i=i end end
+	for i,o in ipairs(ORIGINS)do if o==profile.origin then sel.origin_i=i end end
+	for i,c in ipairs(CLASSES)do if c==profile.class  then sel.class_i=i end end
+
+	local buttons = {}
+
+	local function redraw()
+		term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
+		term.setCursorPos(cx-10, 3); write("Character Setup")
+
+		local row = 6
+		local function rowCtrl(label, val)
+			term.setCursorPos(cx-16, row); write(label..": ")
+			buttons[#buttons+1] = draw_button(cx-3, row, "<", 3)
+			term.setCursorPos(cx-1, row); write(val)
+			buttons[#buttons+1] = draw_button(cx+2, row, ">", 3)
+			row = row + 2
+		end
+
+		rowCtrl("Glyph",  GLYPHS[sel.glyph_i])
+		rowCtrl("FG",     COLORS[sel.fg_i])
+		rowCtrl("BG",     COLORS[sel.bg_i])
+		rowCtrl("Origin", ORIGINS[sel.origin_i])
+		rowCtrl("Class",  CLASSES[sel.class_i])
+
+		-- Preview box
+		term.setCursorPos(cx-16, row); write("Preview:")
+		local pvx, pvy = cx-6, row
+		term.setCursorPos(pvx, pvy+1)
+		term.blit(GLYPHS[sel.glyph_i], COLORS[sel.fg_i], COLORS[sel.bg_i])
+
+		row = row + 4
+		local useBtn  = draw_button(cx-12, row, "Use Existing", 13)
+		local saveBtn = draw_button(cx+2,  row, "Save & Play", 12)
+		return useBtn, saveBtn
+	end
+
+	local useBtn, saveBtn = redraw()
+
+	while true do
+		local e = { os.pullEvent() }
+		if e[1] == "mouse_click" then
+			local b,mx,my = e[2],e[3],e[4]
+			if hit(useBtn,mx,my) then
+				return nil -- no change; just play
+			elseif hit(saveBtn,mx,my) then
+				return {
+					name   = profile.name,
+					glyph  = GLYPHS[sel.glyph_i],
+					fg     = COLORS[sel.fg_i],
+					bg     = COLORS[sel.bg_i],
+					origin = ORIGINS[sel.origin_i],
+					class  = CLASSES[sel.class_i]
+				}
+			else
+				-- detect which row arrows were clicked
+				for i,btn in ipairs(buttons) do
+					if hit(btn,mx,my) then
+						-- rows: 1 glyph <, 2 glyph >, 3 fg <, 4 fg >, ...
+						local which = math.ceil(i/2)
+						local isRight = (i%2==0)
+						local dir = isRight and 1 or -1
+						if which==1 then sel.glyph_i  = cycle(GLYPHS, sel.glyph_i,  dir)
+						elseif which==2 then sel.fg_i = cycle(COLORS, sel.fg_i,     dir)
+						elseif which==3 then sel.bg_i = cycle(COLORS, sel.bg_i,     dir)
+						elseif which==4 then sel.origin_i = cycle(ORIGINS, sel.origin_i, dir)
+						elseif which==5 then sel.class_i  = cycle(CLASSES, sel.class_i,  dir)
+						end
+						useBtn, saveBtn = redraw()
+						break
+					end
+				end
+			end
+		elseif e[1] == "key" and keys.getName(e[2]) == "escape" then
+			return nil
+		end
+	end
+end
+
 -- ========== Input/render loop ==========
 local function gameplay_loop(player_id, handshake, player_name, stats)
 	local HUD_ROWS = 2
@@ -178,6 +293,21 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 		-- Draw Mana
 		term.blit(spacerStr, string.rep("f", #spacerStr), string.rep("f", #spacerStr))
 		term.blit(mpStr, string.rep("b", #mpStr), string.rep("f", #mpStr))
+	end
+
+	-- profile from server (handshake.profile); if nil, fallback
+	local profile = handshake.profile or {
+		name = player_name, glyph="@",
+		fg="f", bg="b", origin="Human", class="Fighter"
+	}
+
+	-- Offer choice: use existing or customize
+	local newProfile = customizer_ui(profile)  -- nil means "Use Existing"
+	if newProfile then
+		-- send to server and wait briefly for ack (optional)
+		rednet.send(WORLD_ID, textutils.serialize({type="set_profile", player_id=player_id, profile=newProfile}), PROTO_MMO)
+		-- adopt immediately so local preview matches
+		profile = newProfile
 	end
 
 	term.setBackgroundColor(colors.black)
@@ -279,6 +409,10 @@ while true do
 			print(err or "World handshake failed.")
 			drive.ejectDisk(); sleep(2)
 		else
+			rednet.send(WORLD_ID, textutils.serialize({
+				type="introduce", player_id=player_id, name=player_name
+			}), PROTO_MMO)
+
 			local ok, err = pcall(gameplay_loop, auth.id, handshake, player_name, last_stats)
 			if not ok then
 				print("Client error: " .. tostring(err))
