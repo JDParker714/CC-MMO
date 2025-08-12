@@ -128,13 +128,9 @@ local function customizer_ui(profile, auth_name)
 
 	local function redraw()
 		term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
-		term.setCursorPos(cx-10, 2); write("Character Setup")
+		term.setCursorPos(cx-8, 2); write("Character  Setup")
 		term.setTextColor(colors.lightBlue);
 		term.setCursorPos(cx-math.floor(#auth_name/2), 3); write(auth_name)
-
-		local hint = "Click arrows. Save & Play or Use Existing. ESC = Skip"
-		term.setTextColor(colors.lightGray);
-		term.setCursorPos(cx-math.floor(#hint/2), 4); write(hint)
 		term.setTextColor(colors.white);
 
 		local row = 6
@@ -155,7 +151,7 @@ local function customizer_ui(profile, auth_name)
 		-- Preview box
 		term.setCursorPos(cx-18, row); write("Preview:")
 		local pvx, pvy = cx-1, row
-		term.setCursorPos(pvx, pvy+1)
+		term.setCursorPos(pvx, pvy)
 		term.blit(GLYPHS[sel.glyph_i], COLORS[sel.fg_i], COLORS[sel.bg_i])
 
 		-- ===== Buttons anchored to bottom so they never go off screen =====
@@ -168,8 +164,9 @@ local function customizer_ui(profile, auth_name)
 		local start = math.max(1, cx - math.floor(total/2))
 		local use_x = start
 		local save_x = start + use_w + gap
-		local button_y = h - 2
-
+		local button_y = h - 1
+		
+		term.setTextColor(colors.lightGray);
 		local useBtn  = draw_button(use_x,  button_y, "Use Existing (Skip)", use_w)
 		local saveBtn = draw_button(save_x,  button_y, "Save & Play",        save_w)
 		return useBtn, saveBtn
