@@ -91,7 +91,7 @@ local function cycle(tbl, idx, dir)
 	return idx
 end
 
-local COLORS = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e"}
+local COLORS = {"0","1","2","3","4","5","6","7","8","9","a","b","c","e"}
 local GLYPHS = {"@", "&", "P", "G", "A", "N", "D", "w"}
 local ORIGINS= {"Human","Elf","Dwarf","Orc","Tiefling"}
 local CLASSES= {"Fighter","Wizard","Rogue","Cleric","Ranger"}
@@ -133,8 +133,8 @@ local function customizer_ui(profile)
 		local function rowCtrl(label, val)
 			term.setCursorPos(cx-16, row); write(label..": ")
 			buttons[#buttons+1] = draw_button(cx-3, row, "<", 3)
-			term.setCursorPos(cx-1, row); write(val)
-			buttons[#buttons+1] = draw_button(cx+2, row, ">", 3)
+			term.setCursorPos(cx, row); write(val)
+			buttons[#buttons+1] = draw_button(cx+8, row, ">", 3)
 			row = row + 2
 		end
 
