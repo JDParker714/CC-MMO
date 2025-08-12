@@ -356,7 +356,7 @@ spawn_npc(npc_x, npc_y, {
 local function spawn_if_needed(id)
 	if not players[id] then
 		local sx, sy = find_free_spawn(125, 50)
-		local prof = load_profile(id) or default_profile(players[id].name)
+		local prof = load_profile(id) or default_profile()
 		players[id] = {
 			--Profile
 			name = prof.name,
@@ -427,7 +427,7 @@ local function overlay_players(rows, me_id, center_x, center_y)
 				stamp(rows, sx, sy, glyph, fg, bg)
 
 				-- 3-char name tag (others only), one row above if visible
-				if sy > 1 then
+				if sy > 2 then
 					local tag = ((op.name or "EVL"):upper()):sub(1,3)
 					local tagStart = math.max(1, math.min(VIEW_W-2, sx - 1)) -- try center on head
 					stamp_text(rows, tagStart, sy - 2, tag, "0", rows[math.max(1, sy-2)].bg:sub(tagStart, tagStart))
@@ -436,7 +436,7 @@ local function overlay_players(rows, me_id, center_x, center_y)
 			end
 		end
 	end
-	
+
 	-- draw ME last at center so I’s on top
 	local me = players[me_id]
 	local g  = (me and me.profile and me.profile.glyph) or "@"

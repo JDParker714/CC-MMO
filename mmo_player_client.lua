@@ -76,7 +76,7 @@ end
 -- ========== World Server handshake ==========
 local function ws_handshake(player_id)
 	rednet.send(WORLD_ID, textutils.serialize({ type="handshake", player_id=player_id }), PROTO_MMO)
-	local _, raw = rednet.receive(PROTO_MMO, 3)
+	local _, raw = rednet.receive(PROTO_MMO, 6)
 	if not raw then return nil, "No world server response" end
 	local resp = textutils.unserialize(raw)
 	if not resp or resp.type ~= "handshake_ack" then return nil, "Bad world handshake" end
@@ -410,7 +410,7 @@ while true do
 			drive.ejectDisk(); sleep(2)
 		else
 			rednet.send(WORLD_ID, textutils.serialize({
-				type="introduce", player_id=player_id, name=player_name
+				type="introduce", player_id=auth.id, name=player_name
 			}), PROTO_MMO)
 
 			local ok, err = pcall(gameplay_loop, auth.id, handshake, player_name, last_stats)
