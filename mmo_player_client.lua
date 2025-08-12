@@ -106,7 +106,8 @@ local function hit(btn, mx,my)
 	return mx>=btn.x and mx<=(btn.x+btn.w-1) and my>=btn.y and my<=(btn.y+btn.h-1)
 end
 
-local function customizer_ui(profile)
+local function customizer_ui(profile, auth_name)
+	auth_name = auth_name or profile.name or "Player"
 	term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
 	local w,h = term.getSize()
 	local cx = math.floor(w/2)
@@ -128,7 +129,13 @@ local function customizer_ui(profile)
 	local function redraw()
 		term.setBackgroundColor(colors.black); term.setTextColor(colors.white); term.clear()
 		term.setCursorPos(cx-10, 2); write("Character Setup")
-		term.setCursorPos(cx-math.floor(#profile.name/2), 3); write(profile.name)
+		term.setTextColor(colors.lightBlue);
+		term.setCursorPos(cx-math.floor(#auth_name/2), 3); write(auth_name)
+
+		local hint = "Click arrows. Save & Play or Use Existing. ESC = Skip"
+		term.setTextColor(colors.lightGray);
+		term.setCursorPos(cx-math.floor(#hint/2), 4); write(hint)
+		term.setTextColor(colors.white);
 
 		local row = 6
 		local function rowCtrl(label, val)
@@ -151,9 +158,20 @@ local function customizer_ui(profile)
 		term.setCursorPos(pvx, pvy+1)
 		term.blit(GLYPHS[sel.glyph_i], COLORS[sel.fg_i], COLORS[sel.bg_i])
 
-		row = row + 4
-		local useBtn  = draw_button(cx-12, row, "Use Existing", 13)
-		local saveBtn = draw_button(cx+2,  row, "Save & Play", 12)
+		-- ===== Buttons anchored to bottom so they never go off screen =====
+		-- Reset arrows list on each redraw (important)
+		buttons = {}
+
+		-- Position buttons centered on the bottom-2 row
+		local use_w, save_w, gap = 19, 12, 4
+		local total = use_w + gap + save_w
+		local start = math.max(1, cx - math.floor(total/2))
+		local use_x = start
+		local save_x = start + use_w + gap
+		local button_y = h - 2
+
+		local useBtn  = draw_button(use_x,  button_y, "Use Existing (Skip)", use_w)
+		local saveBtn = draw_button(save_x,  button_y, "Save & Play",        save_w)
 		return useBtn, saveBtn
 	end
 
@@ -167,7 +185,7 @@ local function customizer_ui(profile)
 				return nil -- no change; just play
 			elseif hit(saveBtn,mx,my) then
 				return {
-					name   = profile.name,
+					name   = auth_name,
 					glyph  = GLYPHS[sel.glyph_i],
 					fg     = COLORS[sel.fg_i],
 					bg     = COLORS[sel.bg_i],
@@ -303,7 +321,7 @@ local function gameplay_loop(player_id, handshake, player_name, stats)
 	}
 
 	-- Offer choice: use existing or customize
-	local newProfile = customizer_ui(profile)  -- nil means "Use Existing"
+	local newProfile = customizer_ui(profile, player_name)  -- nil means "Use Existing"
 	if newProfile then
 		-- send to server and wait briefly for ack (optional)
 		rednet.send(WORLD_ID, textutils.serialize({type="set_profile", player_id=player_id, profile=newProfile}), PROTO_MMO)
