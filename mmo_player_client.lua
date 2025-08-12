@@ -154,10 +154,6 @@ local function customizer_ui(profile, auth_name)
 		term.setCursorPos(pvx, pvy)
 		term.blit(GLYPHS[sel.glyph_i], COLORS[sel.fg_i], COLORS[sel.bg_i])
 
-		-- ===== Buttons anchored to bottom so they never go off screen =====
-		-- Reset arrows list on each redraw (important)
-		buttons = {}
-
 		-- Position buttons centered on the bottom-2 row
 		local use_w, save_w, gap = 19, 12, 4
 		local total = use_w + gap + save_w
